@@ -1,6 +1,6 @@
 #ifndef SHAPE_H
 #define SHAPE_H
-
+//test
 /** 形状：
  * 1, 拷贝构造和拷贝赋值都是深拷贝。
  * @version 1.7B
