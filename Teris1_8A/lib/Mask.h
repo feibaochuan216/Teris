@@ -29,7 +29,7 @@ public:
 	Mask(const int sz);
 	
 	/** 拷贝构造：
-	 * 深拷贝，内部数据是完全不同的两个对象。 */
+	 * 深拷贝，内部数据是完全不同的两个对象，但值相等。 */
 	Mask(const Mask & that);
 	
 	~Mask();
@@ -89,6 +89,16 @@ public:
 	/** 全部填充为指定值 */
 	Mask & fill(const bool v);
 	
+	/** 重新设定大小：
+	 * @param sz ：布尔值的新的个数，必须 > 0 。 */
+	inline Mask & resz(int sz) {
+		if(needRecap(sz)) {
+			Mask tmp(m_data, mkCap(m_sz), sz);
+			swap(tmp);
+		}
+		return * this;
+	}
+	
 	/**
 	 * ================ 输入输出重载 ================
 	 */
@@ -118,6 +128,12 @@ protected:
 	uchar * m_data; // 无符号字符数组，每一位（注意不是每个字节）都是一个布尔值
 	int m_sz; // 布尔值的数量
 	const static int BASE_SZ = 8; // 一个字节里有几位
+	
+	/**
+	 * ~~~~~~~~~~~~ 构造 ~~~~~~~~~~~~
+	 */
+	
+	Mask(const uchar * data, int len, int sz);
 	
 	/**
 	 * ~~~~~~~~~~~~ 判断 ~~~~~~~~~~~~
@@ -159,6 +175,12 @@ protected:
 		uchar mask = 128;
 		return mask >>= index;
 	}
+	
+	/**
+	 * ~~~~~~~~~~~~ 改 ~~~~~~~~~~~~
+	 */
+	
+	Mask & swap(Mask & that);
 };
 
 #endif // MASK_H

@@ -147,7 +147,39 @@ istream & operator >>(istream & is, Mask & This) {
 	return is;
 }
 
+/**
+ * ================ 仅内部使用 ================
+ */
 
+/**
+ * ~~~~~~~~~~~~ 构造 ~~~~~~~~~~~~
+ */
+
+/** 构造一个新的指定个数的布尔值集合，并拷贝指定布尔值：
+ * @param data ：要拷贝的布尔值。
+ * @param len ：data数组的长度。
+ * @param sz ：新集合的布尔值个数。 */
+Mask::Mask(const uchar * data, int len, int sz) : m_data(new uchar[mkCap(sz)]), m_sz(sz) {
+	for(int i = 0; i < len; ++i) {
+		m_data[i] = data[i];
+	}
+}
+
+/**
+ * ~~~~~~~~~~~~ 改 ~~~~~~~~~~~~
+ */
+
+/** 交换两个对象的数据：
+ * 用于替换成临时对象的数据，如果出现错误，数据不会马上丢失。 */
+Mask & Mask::swap(Mask & that) {
+	uchar * tmp = that.m_data;
+	that.m_data = m_data;
+	m_data = tmp;
+	m_sz = m_sz ^ that.m_sz;
+	that.m_sz = m_sz ^ that.m_sz;
+	m_sz = m_sz ^ that.m_sz;
+	return * this;
+}
 
 
 
