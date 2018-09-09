@@ -1,22 +1,25 @@
 #ifndef NEXTPANEL_H
 #define NEXTPANEL_H
 
-#include "Service.h"
+#include "RelatObject.h"
 #include "Shape.h"
-#include "../show/GameDlg.h"
+#include "../exception/ExTemp.h"
 
 extern int LTC_SZ;
 extern int SHP_SZ;
 class GameDlg; // 前置声明
 
-class NextPanel : public Service {
+/** 下一形状面板：
+ * 生成并为用户展示下一个下落形状。
+ */
+class NextPanel : public RelatObject {
 public:
 	
 	/**
 	 * ================ 构造、析构 ================
 	 */
 	
-	NextPanel(Service * parent = nullptr);
+	NextPanel(RelatObject * parent = nullptr);
 	
 	/** 不允许拷贝构造 */
 private:
@@ -75,16 +78,24 @@ public:
 	 * 2, 同时生成出一个新的下一个形状。
 	 * 3, 返回值必须作为参数被GamePanel::setFaller()接收。 */
 	inline Shape & give() {
-		if(nullptr == m_shp) {
-			throw NullPtrException(EX_TTL, this, "next shape is null");
-		}
+		if(nullptr == m_shp) nullNextEx(ET);
 		Shape & oldShp = * m_shp;
 		m_shp = new Shape(this);
 		return oldShp;
 	}
 	
 	/**
-	 * ================ 仅内部使用 ================
+	 * ================ 异常 ================
+	 * 1, 将抛异常封装成函数，可统一异常描述信息，也便于统计本类一共有几种异常、每种抛异常的代码在什么地方。
+	 * 2, @param ttl ：异常标题，即抛出异常代码所在的源码文件、函数、行号。调用该函数时传参统一用宏“ET”（详见Exception.h）即可。
+	 */
+	
+	inline void nullNextEx(const QString & ttl) const {
+		throw ExTemp<NullPtrEx>(ttl, this, "next shape is null");
+	}
+	
+	/**
+	 * ================ 内部成员 ================
 	 */
 protected:
 	

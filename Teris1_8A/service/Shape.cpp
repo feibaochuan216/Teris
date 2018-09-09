@@ -4,7 +4,6 @@
 #include "Shape.h"
 #include "NextPanel.h"
 #include "../lib/Tools.h"
-#include "../exception/NullParentException.h"
 #include <QDebug>
 #include <iostream>
 using namespace std;
@@ -16,14 +15,13 @@ extern const bool FIXED_SZ; // config.cpp，下落形状是否是固定大小
  * ================ 公有成员变量 ================
  */
 
-const QString Shape::m_exMsg("member lattice is null");
 
 /**
  * ================ 构造、析构 ================
  */
 
-Shape::Shape(Service * parent)
-	: Service(parent), m_w(0), m_h(0), m_cap(SHP_SZ) {
+Shape::Shape(RelatObject * parent)
+	: RelatObject(parent), m_w(0), m_h(0), m_cap(SHP_SZ) {
 	if(! FIXED_SZ) { // 下落形状不是固定大小，取值在1～cap或1～SHP_SZ
 		m_cap = ::rand() % SHP_SZ + 1;
 	}
@@ -35,8 +33,8 @@ Shape::Shape(Service * parent)
 	updAlign(updSz());
 }
 
-Shape::Shape(const int w, const int h, Service * parent)
-	: Service(parent), m_w(0), m_h(0), m_cap(w * h), m_ls() {
+Shape::Shape(const int w, const int h, RelatObject * parent)
+	: RelatObject(parent), m_w(0), m_h(0), m_cap(w * h), m_ls() {
 	// 形状的实际宽高不一定是w、h，由updXxx()函数计算宽高
 	Lattice * ltc = nullptr;
 	for(int i = 0; i < h; ++i) {
@@ -58,7 +56,7 @@ Shape::Shape(const int w, const int h, Service * parent)
 }
 
 Shape::Shape(const Shape & that)
-	: Service(that.m_x, that.m_y, that.m_parent),
+	: RelatObject(that.m_x, that.m_y, that.m_parent),
 	m_w(that.m_w), m_h(that.m_h), m_cap(that.m_cap), m_ls() {
 	bool flg = false; // 标记：that中是否有NULL格子
 	foreach(const Lattice * thatLtc, that.m_ls) {
@@ -71,8 +69,8 @@ Shape::Shape(const Shape & that)
 	if(flg) updAlign(updSz());
 }
 
-Shape::Shape(const Shape & that, Service * parent)
-	: Service(that.m_x, that.m_y, parent),
+Shape::Shape(const Shape & that, RelatObject * parent)
+	: RelatObject(that.m_x, that.m_y, parent),
 	m_w(that.m_w), m_h(that.m_h), m_cap(that.m_cap), m_ls() {
 	bool flg = false; // 标记：that中是否有NULL格子
 	foreach(const Lattice * thatLtc, that.m_ls) {
@@ -112,13 +110,9 @@ Shape & Shape::operator =(const Shape & that) {
 	if(m_ls.size() > that.m_ls.size()) { // this的格子数量 > that
 		QMutableLinkedListIterator<Lattice *> thisIt(m_ls);
 		foreach(const Lattice * thatLtc, that.m_ls) {
-			if(nullptr == thatLtc) {
-				throw NullPtrException(EX_TTL, & that, m_exMsg);
-			}
+			if(nullptr == thatLtc) nullMbrLtcEx(ET);
 			Lattice * thisLtc = thisIt.next();
-			if(nullptr == thisLtc) {
-				throw NullPtrException(EX_TTL, this, m_exMsg);
-			}
+			if(nullptr == thisLtc) nullMbrLtcEx(ET);
 			* thisLtc = * thatLtc; // 格子赋值
 			thisLtc->setParent(this);
 		} // 遍历that
@@ -130,21 +124,15 @@ Shape & Shape::operator =(const Shape & that) {
 	} else { // this的格子数量 ≤ that
 		QLinkedListIterator<Lattice *> thatIt(that.m_ls);
 		foreach(Lattice * thisLtc, m_ls) {
-			if(nullptr == thisLtc) {
-				throw NullPtrException(EX_TTL, this, m_exMsg);
-			}
+			if(nullptr == thisLtc) nullMbrLtcEx(ET);
 			Lattice * thatLtc = thatIt.next();
-			if(nullptr == thatLtc) {
-				throw NullPtrException(EX_TTL, & that, m_exMsg);
-			}
+			if(nullptr == thatLtc) nullMbrLtcEx(ET);
 			* thisLtc = * thatLtc; // 格子赋值
 			thisLtc->setParent(this);
 		} // 遍历this
 		while(thatIt.hasNext()) {
 			Lattice * thatLtc = thatIt.next();
-			if(nullptr == thatLtc) {
-				throw NullPtrException(EX_TTL, & that, m_exMsg);
-			}
+			if(nullptr == thatLtc) nullMbrLtcEx(ET);
 			m_ls += new Lattice(* thatLtc, this);
 		}
 	} // this的格子数量 ≤ that
@@ -164,15 +152,10 @@ bool operator ==(const Shape & shp1, const Shape & shp2) {
 	if(shp1.m_ls.size() != shp2.m_ls.size()) return false;
 	if(shp1.m_w == shp2.m_w && shp1.m_h == shp2.m_h) {
 		foreach(const Lattice * ltc1, shp1.m_ls) {
-			if(nullptr == ltc1) {
-				throw NullPtrException(EX_TTL, & shp1, Shape::m_exMsg);
-			}
+			if(nullptr == ltc1) shp1.nullMbrLtcEx(ET);
 			bool flg = false; // 标记：有没有坐标一样的格子
 			foreach(const Lattice * ltc2, shp2.m_ls) {
-				if(nullptr == ltc2) {
-					throw NullPtrException(
-								EX_TTL, & shp2, Shape::m_exMsg);
-				}
+				if(nullptr == ltc2) shp2.nullMbrLtcEx(ET);
 				if(ltc1->x() == ltc2->x() && ltc1->y() == ltc2->y()) {
 					flg = true;
 				}
@@ -200,9 +183,7 @@ bool Shape::same(const Shape & that) const {
 bool Shape::isOverlap(const Shape & that) const {
 	if(0 == m_ls.size() * that.m_ls.size()) return false;
 	foreach(const Lattice * thisLtc, m_ls) {
-		if(nullptr == thisLtc) {
-			throw NullPtrException(EX_TTL, this, m_exMsg);
-		}
+		if(nullptr == thisLtc) nullMbrLtcEx(ET);
 		if(that.isOverlap(* thisLtc)) return true;
 	}
 	return false;
@@ -214,9 +195,7 @@ bool Shape::isOverlap(const Shape & that) const {
 
 /** 本形状在【下一形状】面板时，像素坐标的算法会有所不同 */
 int Shape::xPix() const {
-	if(nullptr == m_parent) {
-		throw NullParentException(EX_TTL, this);
-	}
+	if(nullptr == m_parent) nullParentEx(ET);
 	if(typeid(* m_parent) == typeid(NextPanel)) {
 		return m_parent->xPix() + (m_parent->widthPix() - m_w * LTC_SZ) / 2;
 	} else return m_parent->xPix() + m_x * LTC_SZ;
@@ -224,9 +203,7 @@ int Shape::xPix() const {
 
 /** 同上 */
 int Shape::yPix() const {
-	if(nullptr == m_parent) {
-		throw NullParentException(EX_TTL, this);
-	}
+	if(nullptr == m_parent) nullParentEx(ET);
 	if(typeid(* m_parent) == typeid(NextPanel)) {
 		return m_parent->yPix() + (m_parent->heightPix() - m_h * LTC_SZ) / 2;
 	} else return m_parent->yPix() + m_y * LTC_SZ;
@@ -252,18 +229,17 @@ int Shape::rmRows(const QVector<int> & rows) {
 	QMutableLinkedListIterator<Lattice *> it(m_ls);
 	while(it.hasNext()) {
 		Lattice * ltc = it.next();
-		if(nullptr == ltc) {
-			throw NullPtrException(EX_TTL, this, m_exMsg);
-		}
+		if(nullptr == ltc) nullMbrLtcEx(ET);
 		for(int i = 0; i < rows.size(); ++i) {
 			if(ltc->yig() == rows[i]) {
 				it.remove();
+				delete ltc;
 				++cnt;
 				break;
 			}
 		} // 遍历rows
 	} // 遍历m_ls
-	if(0 != cnt) {
+	if(cnt > 0 && ! m_ls.isEmpty()) {
 		QPoint offset = updSz();
 		updAlign(offset);
 		move(-offset.x(), -offset.y());
@@ -277,9 +253,7 @@ bool Shape::rm(const int row, const int col) {
 	QMutableLinkedListIterator<Lattice *> it(m_ls);
 	while(it.hasNext()) {
 		Lattice * ltc = it.next();
-		if(nullptr == ltc) {
-			throw NullPtrException(EX_TTL, this, m_exMsg);
-		}
+		if(nullptr == ltc) nullMbrLtcEx(ET);
 		if(row == ltc->yig() && col == ltc->xig()) {
 			delete ltc;
 			ltc = nullptr;
@@ -299,9 +273,7 @@ QPoint Shape::updSz() {
 	int max_x = 0, max_y = 0, min_x = m_cap, min_y = m_cap;
 	// 所有格子中的最大、最小坐标值
 	foreach(const Lattice * ltc, m_ls) {
-		if(nullptr == ltc) {
-			throw NullPtrException(EX_TTL, this, m_exMsg);
-		}
+		if(nullptr == ltc) nullMbrLtcEx(ET);
 		if(ltc->x() > max_x) max_x = ltc->x();
 		if(ltc->x() < min_x) min_x = ltc->x();
 		if(ltc->y() > max_y) max_y = ltc->y();
@@ -316,9 +288,7 @@ QPoint Shape::updSz() {
 Shape & Shape::updAlign(const QPoint & offset) {
 	if (0 == offset.x() && 0 == offset.y()) return * this;
 	foreach(Lattice * ltc, m_ls) {
-		if(nullptr == ltc) {
-			throw NullPtrException(EX_TTL, this, m_exMsg);
-		}
+		if(nullptr == ltc) nullMbrLtcEx(ET);
 		ltc->set_x(ltc->x() - offset.x());
 		ltc->set_y(ltc->y() - offset.y());
 	}
@@ -327,9 +297,7 @@ Shape & Shape::updAlign(const QPoint & offset) {
 
 Shape & Shape::rotateClock() {
 	foreach(Lattice * ltc, m_ls) {
-		if(nullptr == ltc) {
-			throw NullPtrException(EX_TTL, this, m_exMsg);
-		}
+		if(nullptr == ltc) nullMbrLtcEx(ET);
 		int tmp = ltc->x();
 		ltc->set_x(m_cap - ltc->y() - 1);
 		ltc->set_y(tmp);
@@ -342,9 +310,7 @@ Shape & Shape::rotateClock() {
 
 Shape & Shape::rotateAnti() {
 	foreach(Lattice * ltc, m_ls) {
-		if(nullptr == ltc) {
-			throw NullPtrException(EX_TTL, this, m_exMsg);
-		}
+		if(nullptr == ltc) nullMbrLtcEx(ET);
 		int tmp = ltc->x();
 		ltc->set_x(ltc->y());
 		ltc->set_y(m_cap - tmp - 1);
@@ -374,9 +340,7 @@ Lattice * Shape::randLtcClose2Exist(Lattice * ltc) {
 	QLinkedListIterator<Lattice *> it(m_ls);
 	for(int i = 0; i < index; ++i) it.next();
 	Lattice * exist = it.next(); // 随机取出的已有格子
-	if(nullptr == exist) {
-		throw NullPtrException(EX_TTL, this, m_exMsg);
-	}
+	if(nullptr == exist) nullMbrLtcEx(ET);
 	do {
 		int dir = ::rand() % 4; // 从上下左右中随机选一个方向
 		switch(dir) {
@@ -417,9 +381,7 @@ Lattice * Shape::randLtc(Lattice * ltc, const int w, const int h) {
 bool Shape::isRowFull(const Lattice * ltc, const int gpWidth) {
 	int cnt = 0; // 计数：指定行有几个格子
 	foreach(const Lattice * exist, m_ls) {
-		if(nullptr == exist) {
-			throw NullPtrException(EX_TTL, this, m_exMsg);
-		}
+		if(nullptr == exist) nullMbrLtcEx(ET);
 		if(ltc->y() == exist->y()) ++cnt;
 	}
 	if(gpWidth == cnt) return true;
@@ -433,14 +395,14 @@ bool Shape::isRowFull(const Lattice * ltc, const int gpWidth) {
 
 void Shape::print(const int level/* = 0*/) const {
 	indent(level);
-	cout << "Shape: " << this << " = {parent: " << m_parent
-		 << ", x = " << m_x << ", y = " << m_y 
-		 << ", w = " << m_w << ", h = " << m_h<< ", cap = " << m_cap
+	cout << "Shape(" << this << "):{parent: " << m_parent
+		 << ", x: " << m_x << ", y: " << m_y 
+		 << ", w: " << m_w << ", h: " << m_h<< ", cap: " << m_cap
 		 << ',' << endl;
 	indent(level + 1);
-	cout << "xPix = " << xPix() << ", yPix = " << yPix() 
-		 << ", wPix = " << widthPix() << ", hPix = " << heightPix() 
-		  << ", ls = [" << endl;
+	cout << "xPix: " << xPix() << ", yPix: " << yPix() 
+		 << ", wPix: " << widthPix() << ", hPix: " << heightPix() 
+		  << ", ls: [" << endl;
 	foreach(Lattice * ltc, m_ls) {
 		ltc->print(level + 2);
 	}

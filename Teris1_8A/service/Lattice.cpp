@@ -1,16 +1,15 @@
 #include "Lattice.h"
-#include "../exception/NullParentException.h"
 
 /**
  * ================ 构造、析构 ================
  */
 
-Lattice::Lattice(Service * parent) : Service(parent) {}
+Lattice::Lattice(RelatObject * parent) : RelatObject(parent) {}
 
-Lattice::Lattice(int x, int y, Service * parent) : Service(x, y, parent) {}
+Lattice::Lattice(int x, int y, RelatObject * parent) : RelatObject(x, y, parent) {}
 
-Lattice::Lattice(const Lattice & that, Service * parent)
-	: Service(that.m_x, that.m_y, parent) {}
+Lattice::Lattice(const Lattice & that, RelatObject * parent)
+	: RelatObject(that.m_x, that.m_y, parent) {}
 
 Lattice::~Lattice() {}
 
@@ -40,16 +39,12 @@ int Lattice::heightPix() const {
 }
 
 int Lattice::xig() const {
-	if(nullptr == m_parent) {
-		throw NullParentException(EX_TTL, this);
-	}
+	if(nullptr == m_parent) nullParentEx(ET);
 	return m_parent->x() + m_x;
 }
 
 int Lattice::yig() const {
-	if(nullptr == m_parent) {
-		throw NullParentException(EX_TTL, this);
-	}
+	if(nullptr == m_parent) nullParentEx(ET);
 	return m_parent->y() + m_y;
 }
 
@@ -58,9 +53,11 @@ int Lattice::yig() const {
  */
 #ifndef DEBUG
 
+/** 打印对象信息：
+ * @param level：默认为零；作为其他对象的成员变量时，level + 1。 */
 void Lattice::print(const int level/* = 0*/) const {
 	indent(level);
-	cout << "Lattice: " << this << " = {parent: " << m_parent << ", x = " << m_x << ", y = " << m_y << ", xPix = " << xPix() << ", yPix = " << yPix() << '}' << endl;
+	cout << "Lattice(" << this << "):{parent: " << m_parent << ", x: " << m_x << ", y: " << m_y << ", xPix: " << xPix() << ", yPix: " << yPix() << '}' << endl;
 }
 
 #endif // DEBUG

@@ -1,41 +1,23 @@
 ﻿#include "GamePanel.h"
-#include "../exception/NullPtrException.h"
-#include "../exception/OutRangeGeomException.h"
+#include "../show/GameDlg.h"
 #include <QMessageBox>
+#include <QMap>
 
 extern int GP_WIDTH;
 extern int GP_HEIGHT; // 游戏面板默认尺寸
 extern int ROTAT_DIR; // 尝试旋转时用到
 
 /**
- * ================ 公有成员变量 ================
- */
-
-const QString GamePanel::m_obsShpExMsg("shape of obstracts is null");
-const QString GamePanel::m_obsLtcExMsg("lattice of obstracts is null");
-const QString GamePanel::m_fallerExMsg("m_faller is null");
-
-/**
  * ================ 构造、析构 ================
  */
 
 GamePanel::GamePanel(const int level/* = 1*/)
-	: Service(nullptr), m_level(level),
+	: RelatObject(nullptr), state(StateSz), m_level(level),
 	m_w(GP_WIDTH), m_h(GP_HEIGHT), m_faller(new Shape(this)), m_obs(),
-	m_speed(SLOWEST), m_score(0), m_passScore(0), m_totalScore(0),
-	m_state(6), // 一共有6种状态标记
-	m_fallTmr(0),
-	m_client(nullptr) { // 必须为NULL，防止循环构造
-	if(level < 1) {
-		throw Exception(EX_TTL, this, "game level < 1");
-	}
-	initFallerPos();
-	setObs(level);
-	setSpeed(level);
-	setPassScore(level);
-	m_score = 0;
-	m_state.fill(false); // 状态标记全部为否
-	m_state.setVal(PAUSE, true); // 默认是暂停状态
+	m_speed(SLOWEST_SPEED), m_score(0), m_passScore(0),
+	m_totalScore(0), m_client(nullptr) { // 必须为NULL，防止循环构造
+	if(level < 1) gameLevelEx(ET);
+	init(level); // 初始化游戏面板
 }
 
 GamePanel::~GamePanel() {
@@ -56,9 +38,9 @@ GamePanel::~GamePanel() {
 
 bool GamePanel::isOut(const Lattice & ltc) const {
 	if(nullptr == ltc.parent()) {
-		throw NullParentException(EX_TTL, this);
+		ltc.nullParentEx(ET);
 	} else if(nullptr == ltc.parent()->parent()) {
-		throw NullParentException(EX_TTL, this);
+		((Shape *)ltc.parent())->nullParentEx(ET);
 	}
 	if(ltc.parent()->parent() != this) return false; // 格子不属于本游戏面板
 	int x = ltc.xig();
@@ -68,9 +50,7 @@ bool GamePanel::isOut(const Lattice & ltc) const {
 }
 
 bool GamePanel::canMove(const int dx, const int dy/* = 0*/) {
-	if(nullptr == m_faller) {
-		throw NullPtrException(EX_TTL, this, m_fallerExMsg);
-	}
+	if(nullptr == m_faller) nullFallerEx(ET);
 	bool result = true;
 	Shape tmp(* m_faller);
 	tmp.move(dx, dy);
@@ -78,18 +58,14 @@ bool GamePanel::canMove(const int dx, const int dy/* = 0*/) {
 		result = false;
 	} // 是否越界或重叠
 	if(! result && m_faller->y() + m_faller->heigth() <= 0) {
-		m_state.setVal(GAME_OVER, true);
+		state.setVal(IsGameOver, true);
 	}
 	return result;
 }
 
 bool GamePanel::canRotate(int * offset) const {
-	if(nullptr == m_faller) {
-		throw NullPtrException(EX_TTL, this, m_fallerExMsg);
-	}
-	if(m_faller->cap() < 1) {
-		throw Exception(EX_TTL, this, "cap of m_faller < 1");
-	}
+	if(nullptr == m_faller) nullFallerEx(ET);
+	if(m_faller->cap() < 1) fallerCapEx(ET);
 	Shape tmp(* m_faller);
 	if(RD_CLCK == ROTAT_DIR) tmp.rotateClock(); // 顺时针
 	else tmp.rotateAnti(); // 逆时针
@@ -140,36 +116,32 @@ bool GamePanel::isPass() const {
  */
 
 QVector<int> GamePanel::fullRows() {
-	QVector<int> v; // 用于统计每行格子数量；下标为行号
-	for(int i = 0; i < m_h; ++i) v += 0;
-	/* 统计下落形状 */
-	if(nullptr == m_faller) {
-		throw NullPtrException(EX_TTL, this, m_fallerExMsg);
-	}
-	foreach(const Lattice * ltc, m_faller->ls()) {
-		if(nullptr == ltc) {
-			throw NullPtrException(EX_TTL, this, "lattice of faller is null");
-		}
-		++v[ltc->yig()];
-	}
-	/* 统计障碍物 */
-	foreach(const Shape * shp, m_obs) {
-		if(nullptr == shp) {
-			throw NullPtrException(EX_TTL, this, m_obsShpExMsg);
-		}
-		foreach(const Lattice * ltc, shp->ls()) {
-			if(nullptr == ltc) {
-				throw NullPtrException(
-							EX_TTL, this, m_obsLtcExMsg);
-			}
-			++v[ltc->yig()];
-		}
-	}
-	QVector<int> rows;
+	QMap<int, int> map; // 行号与该行格子个数的映射
 	for(int i = 0; i < m_h; ++i) {
-		if(v[i] == m_w) rows += i;
+		map.insert(i, 0);
 	}
-	return rows;
+	if(nullptr == m_faller) nullFallerEx(ET);
+	foreach(const Lattice * ltc, m_faller->ls()) {
+		if(nullptr == ltc) nullLtcInFallerEx(ET);
+		map.insert(ltc->y(), map.value(ltc->y()) + 1);
+	}
+	if(! m_obs.isEmpty()) {
+		foreach(const Shape * shp, m_obs) {
+			if(nullptr == shp) nullShpInObsEx(ET);
+			foreach(const Lattice * ltc, shp->ls()) {
+				if(nullptr == ltc) nullLtcInObsEx(ET, * shp);
+				map.insert(ltc->y(), map.value(ltc->y()) + 1);
+			}
+		}
+	}
+	QVector<int> res;
+	QMapIterator<int, int> it(map);
+	while(it.hasNext()) {
+		int row = it.peekNext().key();
+		int cnt = it.next().value();
+		if(cnt == m_w) res += row;
+	}
+	return res;
 } // fullRows()
 
 /**
@@ -204,21 +176,21 @@ int GamePanel::heightPix() const {
  */
 
 void GamePanel::leftKeyPressEvent() {
-	if(! m_state[PAUSE] && canMove(-1, 0)) {
+	if(! state[IsPause] && canMove(-1, 0)) {
 		m_faller->move(-1, 0);
 		m_client->update();
 	}
 }
 
 void GamePanel::rightKeyPressEvent() {
-	if(! m_state[PAUSE] && canMove(1, 0)) {
+	if(! state[IsPause] && canMove(1, 0)) {
 		m_faller->move(1, 0);
 		m_client->update();
 	}
 }
 
 void GamePanel::rotateKeyPressEvent() {
-	if(! m_state[PAUSE]) {
+	if(! state[IsPause]) {
 		int offset = 0;
 		if(canRotate(& offset)) {
 			if(RD_CLCK == ROTAT_DIR) m_faller->rotateClock();
@@ -230,26 +202,23 @@ void GamePanel::rotateKeyPressEvent() {
 }
 
 void GamePanel::downKeyPressEvent() {
-	if(! m_state[PAUSE]) { // 非暂停状态下
-		m_state.setVal(PRESSING, true);
-		if(! m_state[PRESSED]) { // 之前没有按过Down键
-			m_state.setVal(PRESSED, true);
-			// 标记，本轮下落已按过Down键，无论玩家再按什么，下落形状的速度都不能回到普通速度
-			if(! m_state[PAUSE] && ! m_state[TMR]) { // 未暂定但没有定时器在跑
-				m_fallTmr = m_client->startTimer(FASTEST);
-				m_state.setVal(TMR, true);
-				m_state.setVal(FAST, true);
-			} else if(! m_state[PAUSE] && ! m_state[FAST]) { // 未暂停且有定时器在跑，但是是普通速度的
-				m_client->killTimer(m_fallTmr);
-				m_fallTmr = m_client->startTimer(FASTEST);
-				m_state.setVal(FAST, true);
-			} // 有定时器跑，但是是普通速度的
-		} // 之前没有按过Down键
-	} // 非暂停状态下
-} // downKeyPressEvent()
+	state.setVal(IsPressingDown, true);
+	/* 1, 如果当前为暂停状态，或者已经在以最快速度正在下落，则什么都不做。
+	 * 2, 否则，重新以最快速度为间隔时间开始下落计时。 */
+	if(! state[IsPause]) {
+		state.setVal(IsFallingFast, true);
+		m_fallTmr.setInterval(FASTEST_SPEED);
+		if(! m_fallTmr.isActive()) {
+			m_fallTmr.start();
+		}
+	}
+}
 
 void GamePanel::downKeyReleaseEvent() {
-	m_state.setVal(PRESSING, false);
+	state.setVal(IsPressingDown, false);
+	state.setVal(IsFallingFast, false);
+	if(m_speed < 0) speedEx(ET);
+	m_fallTmr.setInterval(m_speed);
 }
 
 /**
@@ -257,42 +226,13 @@ void GamePanel::downKeyReleaseEvent() {
  */
 
 void GamePanel::start() {
-	if(m_speed < 0) {
-		throw Exception(EX_TTL, this, "speed < 0");
-	}
-	if(m_state[TMR]) { // 有定时器在跑
-		throw Exception(EX_TTL, this, "there's a timer without stopped");
-	}
-	m_state.setVal(PAUSE, false);
-	if(m_state[PRESSING] || m_state[PRESSED]) {
-		m_fallTmr = m_client->startTimer(FASTEST);
-		m_state.setVal(FAST, true);
-	} else {
-		m_fallTmr = m_client->startTimer(m_speed);
-		m_state.setVal(FAST, false);
-	}
-	m_state.setVal(TMR, true); // 标记有定时器在跑
+	state.setVal(IsPause, false); // 不再暂停
+	m_fallTmr.start();
 }
 
 void GamePanel::pause() {
-	if(! m_state[TMR]) { // 没有定时器在跑
-		throw Exception(EX_TTL, this, "fall timer wasn't stopped by pause");
-	}
-	m_state.setVal(PAUSE, true);
-	m_client->killTimer(m_fallTmr);
-	m_state.setVal(TMR, false);
-	m_state.setVal(FAST, false);
-}
-
-void GamePanel::stop() {
-	m_state.setVal(PAUSE, false);
-	m_state.setVal(PRESSED, false);
-	m_state.setVal(GAME_OVER, true);
-	if(m_state[TMR]) { // 有定时器在跑
-		m_client->killTimer(m_fallTmr);
-		m_state.setVal(TMR, false);
-	}
-	m_state.setVal(FAST, false);
+	state.setVal(IsPause, true);
+	m_fallTmr.stop();
 }
 
 /**
@@ -303,90 +243,48 @@ void GamePanel::stop() {
  * ~~~~~~~~~~~~ 定时事件处理 ~~~~~~~~~~~~
  */
 
-void GamePanel::timerEvent(QTimerEvent * ev) {
-	if(nullptr == ev) {
-		throw NullPtrException(EX_TTL, this, "QTimerEvent pointer is null");
-	}
-	if(! m_state[TMR]) { // 状态标记却显示没有定时器在跑
-		throw Exception(
-					EX_TTL, this,
-					"state TMR is false but there's a running timer: "
-					+ QString::number(m_fallTmr));
-	}
-	if(ev->timerId() == m_fallTmr) { // 下落定时器到时
-		if(m_state[PAUSE]) { // 当前为暂停状态
-			m_client->killTimer(m_fallTmr);
-			m_state.setVal(TMR, false);
-			m_state.setVal(FAST, false);
-		} else { // 当前非暂停状态
-			if(canMove(0, 1)) { // 下落形状能下降
-				m_faller->move(0, 1);
-				m_client->update(); // 刷新显示
-				return;
-			} else { // 下落形状不能下降
-				m_state.setVal(PRESSED, false); // 本轮下降已结束，本轮标记恢复默认
-				m_client->killTimer(m_fallTmr);
-				m_state.setVal(TMR, false);
-				m_state.setVal(FAST, false); // 先关闭定时器
-				if(m_state[GAME_OVER]) { // 游戏结束
-					gameOver();
-					return;
-				} // 游戏结束
-				if(isPass()) { // 过关
-					pass();
-					return;
-				} // 过关
-				/* 
-				 * 下落形状不能下降，且既没有过关，游戏也没有结束
-				 */
-				QVector<int> rows = fullRows();
-				if(! rows.isEmpty()) { // 需要消行
-					rmRows(rows); // 消行
-					// m_client->rmRows(rows); // 有消行动画效果时
-					compact(rows); // 压紧
-					// m_client->compact(rows); // 有消行动画效果时
-					addScore(rows); // 加分
-					// m_client->addScore(rows); // 加分动画效果
-					m_client->update(); // 刷新显示
-				} // 需要消行
-				nextFaller(); // 更新下落形状
-				initFallerPos(); // 初始化下落形状的位置
-				/*
-				 * 恢复下降定时器
-				 */
-				if(m_state[PRESSING]) { // 此时Down键是按下状态
-					m_fallTmr = m_client->startTimer(FASTEST);
-					m_state.setVal(FAST, true); // 普通定时器改为快速定时器
-				} else { // 此时Down键是抬起状态
-					m_fallTmr = m_client->startTimer(m_speed);
-					m_state.setVal(FAST, false); // 快速定时器改为普通定时器
-				}
-				m_state.setVal(TMR, true);
-			} // 下落形状不能下降
-		} // 当前非暂停状态
-	} else { // 定时器不是下落定时器
-		throw Exception(
-					EX_TTL, this, "unknown timer id: "
-					+ QString::number(m_fallTmr)); // 定时器非法
-	} // 定时器不是下落定时器
-} // timerEvent()
+void GamePanel::onFallTmOut() {
+	if(canMove(0, 1)) { // 下落形状能下降
+		m_faller->move(0, 1);
+		m_client->update(); // 刷新显示
+		return;
+	} else { // 下落形状不能下降
+		m_fallTmr.stop();
+		if(state[IsGameOver]) { // canMove()会设置IsGameOver状态
+			gameOver();
+			return;
+		} else if(isPass()) { // 已过关
+			pass();
+			return;
+		}
+		/* 
+		 * 下落形状不能下降，且既没有过关，游戏也没有结束
+		 */
+		QVector<int> rows = fullRows();
+		if(! rows.isEmpty()) { // 需要消行
+			rmRows(rows); // 消行
+			// m_client->rmRows(rows); // 有消行动画效果时
+			compact(rows); // 压紧
+			// m_client->compact(rows); // 有消行动画效果时
+			addScore(rows); // 加分
+			// m_client->addScore(rows); // 加分动画效果
+			m_client->update(); // 刷新显示
+		} // 需要消行
+		nextFaller(); // 更新下落形状
+		if(! state[IsPause]) m_fallTmr.start(); // 重新开始下落
+	} // 下落形状不能下降
+}
 
 /**
  * ~~~~~~~~~~~~ 过关 ~~~~~~~~~~~~
  */
 
 GamePanel & GamePanel::pass() {
-	++m_level;
-	if(nullptr != m_faller) {
-		delete m_faller;
-	}
-	if(nullptr == m_np) {
-		throw NullPtrException(EX_TTL, this, "GamePanel's m_np is null");
-	}
-	m_np->refresh();
-	if(nullptr != m_faller) delete m_faller;
-	m_faller = new Shape(this);
-	initFallerPos();
+	if(nullptr == m_np) nullNpEx(ET);
+	nextFaller();
+	nextFaller(); // 调用两次以刷新下落形状，以及下一形状面板里的预备形状
+	// 原下落形状会自动添加到障碍物里
+	/* 释放障碍物里的所有形状 */
 	if(! m_obs.isEmpty()) {
 		QMutableLinkedListIterator<Shape *> it(m_obs);
 		while(it.hasNext()) {
@@ -395,15 +293,8 @@ GamePanel & GamePanel::pass() {
 			it.remove();
 		}
 	}
-	setObs(m_level);
-	setSpeed(m_level);
-	m_score = 0;
-	setPassScore(m_level);
-	if(0 != m_fallTmr) {
-		m_client->killTimer(m_fallTmr);
-		m_fallTmr = 0;
-	}
-	m_state.fill(false); // 状态标记全部为否
+	++m_level;
+	init(m_level); // 初始化游戏面板
 	return * this;
 } // pass()
 
@@ -412,14 +303,7 @@ GamePanel & GamePanel::pass() {
  */
 
 void GamePanel::gameOver() {
-	if(m_state[TMR]) {
-		m_client->killTimer(m_fallTmr);
-		m_state.setVal(TMR, false);
-		m_state.setVal(FAST, false);
-	}
-	m_state.setVal(PAUSE, false);
-	m_state.setVal(PRESSED, false);
-	m_state.setVal(GAME_OVER, true);
+	
 	m_client->gameOver(); // 显示Game Over的动画
 }
 
@@ -429,21 +313,15 @@ void GamePanel::gameOver() {
 
 GamePanel & GamePanel::rmRows(const QVector<int> & rows) {
 	if(rows.isEmpty()) return * this;
-	if(nullptr == m_faller) {
-		throw NullPtrException(EX_TTL, this, m_fallerExMsg);
-	}
-	if(0 != m_faller->rmRows(rows) && m_faller->ls().isEmpty()) {
-		delete m_faller;
-		m_faller = nullptr;
-	}
+	if(nullptr == m_faller) nullFallerEx(ET);
+	m_faller->rmRows(rows);
 	QMutableLinkedListIterator<Shape *> it(m_obs);
 	while(it.hasNext()) {
 		Shape * shp = it.next();
-		if(nullptr == shp) {
-			throw NullPtrException(EX_TTL, this, m_obsShpExMsg);
-		}
-		if(0 != shp->rmRows(rows) && shp->ls().isEmpty()) {
+		if(nullptr == shp) nullShpInObsEx(ET);
+		if(shp->rmRows(rows) > 0 && shp->ls().isEmpty()) {
 			it.remove();
+			delete shp; // 如果形状被删空了，就从障碍物中删除并释放
 		}
 	}
 	return * this;
@@ -451,9 +329,7 @@ GamePanel & GamePanel::rmRows(const QVector<int> & rows) {
 
 void GamePanel::rm(const int row, const int col) {
 	if(row < 0 || row >= m_h || col < 0 || col >= m_w) return;
-	if(nullptr == m_faller) {
-		throw NullPtrException(EX_TTL, this, m_fallerExMsg);
-	}
+	if(nullptr == m_faller) nullFallerEx(ET);
 	if(m_faller->rm(row, col) && m_faller->ls().isEmpty()) {
 		// 下落形状被删空
 		delete m_faller;
@@ -463,9 +339,7 @@ void GamePanel::rm(const int row, const int col) {
 	QMutableLinkedListIterator<Shape *> it(m_obs);
 	while(it.hasNext()) {
 		Shape * shp = it.next();
-		if(nullptr == shp) {
-			throw NullPtrException(EX_TTL, this, m_obsShpExMsg);
-		}
+		if(nullptr == shp) nullShpInObsEx(ET);
 		if(shp->rm(row, col) && shp->ls().isEmpty()) {
 			delete shp;
 			shp = nullptr;
@@ -479,19 +353,14 @@ GamePanel & GamePanel::compact(const QVector<int> & rows) {
 	if(nullptr != m_faller && ! m_faller->ls().isEmpty()) {
 		// 下落形状不为空（下落形状有可能在消行时被删空）
 		foreach(Lattice * ltc, m_faller->ls()) {
-			if(nullptr == ltc) {
-				throw NullPtrException(
-							EX_TTL, this, "lattice of faller is null");
-			}
+			if(nullptr == ltc) nullLtcInFallerEx(ET);
 			for(int i = 0; i < rows.size(); ++i) {
 				if(ltc->yig() < rows[i]) ltc->move(0, 1);
 			}
 		} // 遍历下落形状
 	} // 下落形状不为空
 	foreach(Shape * shp, m_obs) {
-		if(nullptr == shp) {
-			throw NullPtrException(EX_TTL, this, m_obsShpExMsg);
-		}
+		if(nullptr == shp) nullShpInObsEx(ET);
 		shp->rmRows(rows);
 	} // 遍历障碍物
 	return * this;
@@ -502,24 +371,18 @@ GamePanel & GamePanel::compact(const QVector<int> & rows) {
  */
 
 GamePanel & GamePanel::nextFaller() {
-	if(nullptr == m_np) {
-		throw NullPtrException(
-					EX_TTL, this, "NextPanel * in gamePanel is null");
+	if(nullptr == m_np) nullNpEx(ET);
+	if(nullptr == m_faller) nullFallerEx(ET);
+	if(m_faller->ls().isEmpty()) {
+		delete m_faller;
+		// m_faller可能会因为消行把所有格子都给消没了
+	} else {
+		m_obs += m_faller; // 非空的下落形状并入到障碍物中
 	}
-	if(nullptr != m_faller) {
-		m_obs += m_faller;
-	} // else m_faller为NULL可能是因为消行把整个m_faller都给消没了
 	m_faller = & m_np->give();
 	m_faller->setParent(this);
+	initFallerPos(); // 初始化下落形状的位置
 	return * this;
-}
-
-/**
- * ================ Getter/Setter ================
- */
-
-bool GamePanel::isGameOver() const {
-	return m_state[GAME_OVER];
 }
 
 /**
@@ -546,12 +409,29 @@ bool GamePanel::isOut(const Shape & shp) const {
  * @param tmp：必须是属于本游戏面板内的形状。 */
 bool GamePanel::isOverlap(const Shape & tmp) const {
 	foreach(const Shape * shp, m_obs) {
-		if(nullptr == shp) {
-			throw NullPtrException(EX_TTL, this, m_obsShpExMsg);
-		}
+		if(nullptr == shp) nullShpInObsEx(ET);
 		if(shp->isOverlap(tmp)) return true;
 	}
 	return false;
+}
+
+/**
+ * ~~~~~~~~~~~~ 初始化游戏 ~~~~~~~~~~~~
+ */
+
+/** 初始化游戏面板：
+ * @param level ：必须 > 0 。 */
+GamePanel & GamePanel::init(int level) {
+	m_level = level;
+	initFallerPos(); // 初始化下落形状的位置
+	setObs(level); // 初始化障碍物
+	setSpeed(level); // 初始化下落速度
+	m_fallTmr.setInterval(m_speed); // 初始化下落定时器的间隔时间
+	setPassScore(level); // 初始化过关需要的分数
+	m_score = 0; // 初始化本局分数
+	state.fill(false); // 状态标记全部为否
+	state.setVal(IsPause, true); // 暂停状态默认为真
+	return * this;
 }
 
 /**
@@ -561,22 +441,21 @@ bool GamePanel::isOverlap(const Shape & tmp) const {
 
 void GamePanel::print(const int level/* = 0*/) const {
 	indent(level);
-	cout << "GamePanel: " << this << " = {" << "parent: " << m_parent
-		 << ", w = " << m_w << ", h = " << m_h << ',' << endl;
+	cout << "GamePanel(" << this << "):{" << "parent: " << m_parent
+		 << ", w: " << m_w << ", h: " << m_h << ',' << endl;
 	indent(level + 1);
-	cout << "xPix = " << xPix() << ", yPix = " << yPix()
-		 << ", wPix = " << widthPix() << ", hPix = " << heightPix()
-		 << ", client: " << m_client << " = \'"
+	cout << "xPix: " << xPix() << ", yPix: " << yPix()
+		 << ", wPix: " << widthPix() << ", hPix: " << heightPix()
+		 << ", client(" << m_client << "): \'"
 		 << m_client->objectName().toStdString() << "\'," << endl;
 	indent(level + 1);
-	cout << "speed = " << m_speed << ", score = " << m_score 
-		 << ", totalScore = " << m_totalScore << ", passScore = " << m_passScore
+	cout << "speed: " << m_speed << ", score: " << m_score 
+		 << ", totalScore: " << m_totalScore << ", passScore: " << m_passScore
 		 << endl;
 	indent(level + 1);
-	cout << boolalpha << "state = {FALL : " << m_state[PAUSE]
-			<< ", PRESSED : " << m_state[PRESSED]
-			   << ", PRESSING : " << m_state[PRESSING] 
-				  << ", GAME_OVER : " << m_state[GAME_OVER] << "}, faller:";
+	cout << boolalpha << "state: {FALL: " << state[IsPause]
+			<< ", PRESSING: " << state[IsPressingDown] 
+			   << ", GAME_OVER: " << state[IsGameOver] << "}, faller:";
 	indent(level);
 	if (nullptr == m_faller) {
 		cout << " nullptr" << endl;
@@ -585,7 +464,7 @@ void GamePanel::print(const int level/* = 0*/) const {
 		m_faller->print(level + 1);
 	}
 	indent(level + 1);
-	cout << "obs: " << & m_obs << " = [" << endl;
+	cout << "obs(" << & m_obs << "):[" << endl;
 	foreach(const Shape * shp, m_obs) {
 		shp->print(level + 2);
 	}
@@ -595,11 +474,10 @@ void GamePanel::print(const int level/* = 0*/) const {
 
 void GamePanel::printStates(const int level/* = 0*/) const {
 	indent(level);
-	cout << "GamePanel: " << boolalpha << " states = {PAUSE : " << m_state[PAUSE]
-			<< ", PRESSED : " << m_state[PRESSED]
-			   << ", PRESSING : " << m_state[PRESSING] 
-				  << ", GAME_OVER : " << m_state[GAME_OVER]
-					 << "}, speed = " << m_speed << endl;
+	cout << "GamePanel: " << boolalpha << " states: {PAUSE: " << state[IsPause]
+			<< ", PRESSING: " << state[IsPressingDown] 
+			   << ", GAME_OVER: " << state[IsGameOver]
+				  << "}, speed: " << m_speed << endl;
 }
 
 

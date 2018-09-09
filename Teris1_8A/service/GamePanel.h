@@ -1,14 +1,14 @@
 #ifndef GAMEPANEL_H
 #define GAMEPANEL_H
 
-#include "Service.h"
+#include "RelatObject.h"
 #include "Shape.h"
 #include "NextPanel.h"
-#include "../show/GameDlg.h"
 #include "../lib/Mask.h"
+#include "../exception/ExTemp.h"
 #include <QLinkedList> // 形状的集合
 #include <QVector> // 要消行的行号的列表
-#include <QTimerEvent>
+#include <QTimer>
 #include <QPair> // 用于canRoate()判断旋转后需要左右移动多少
 #include <cmath> // 用于本局速度计算，得分算法等
 
@@ -16,16 +16,35 @@ extern int OBS_MAX; // 根据关数设置障碍物的初始形状
 class NextPanel;
 class GameDlg; // 前置声明
 
-class GamePanel : public Service {
+/** 游戏面板的业务逻辑：
+ * 1, 专门存放、管理下落形状、障碍物，下落形状在它的范围内下落、旋转。
+ * 2, 以格子个数为坐标单位。
+  
+  未完成：
+
+消行时不允许delete faller，空形状就空形状，只有nextFall()时才可以delete，让faller一直保持不为nullptr  
+
+pass()时连续调用两次nextFall()，并delete掉多余的faller
+  
+ */
+class GamePanel : public RelatObject {
 public:
 	
 	/**
 	 * ================ 公有成员变量 ================
 	 */
 	
-	static const QString m_obsShpExMsg; // 障碍物的成员形状为NULL时的异常提示语
-	static const QString m_obsLtcExMsg; // 障碍物的成员格子为NULL时的异常提示语
-	static const QString m_fallerExMsg; // 下落形状为NULL时的异常提示语
+	Mask state; // 游戏状态标记数组
+	enum StateIndx { // 状态数组的每个下标所代表的含义
+		IsFallingFast = 0, // 定时器是否以最快速度在下落
+		// 这里不能通过m_fallTmr.interval() == FASTEST_SPEED来判断，因为游戏关数到一定级别时，普通速度就已经是最快速度了
+		IsPause = 1, // 是否暂停
+		IsPressingDown = 2, // Down键是否是按下状态，此时下落形状以最快速度下降
+		IsGameOver = 3, // 下落形状已无法再下落，且无法进入游戏面板
+		StateSz = 4 // 状态数组的长度
+	};
+	// 其他判断：
+	// 下落计时器是否正在计时用m_fallTmr.isActive()
 	
 	/**
 	 * ================ 构造、析构 ================
@@ -60,7 +79,7 @@ public:
 	 * 1, @param dx：横向移动的距离；为正表示向右移，为负表示向左移。
 	 * 2, @param dy：纵向移动的距离；为正表示向下移，为负表示向上移。
 	 * 3, @return 能移动则返回true，否则返回false。
-	 * 4, 如果下落形状不能下降，且下落形状在游戏面板的上边沿之外，则将GAME_OVER的状态设置为true。 */
+	 * 4, 如果下落形状不能下降，且下落形状在游戏面板的上边沿之外，则将IsGameOver的状态设置为true。 */
 	bool canMove(const int dx, const int dy = 0);
 	
 	/** 是否能旋转：
@@ -134,9 +153,7 @@ public:
 	 * 2, @param dy：纵向移动的距离；为正表示向下移，为负表示向上移。 */
 	inline GamePanel & moveObs(const int dx, const int dy) {
 		foreach(Shape * shp, m_obs) {
-			if(nullptr == shp) {
-				throw NullPtrException(EX_TTL, this, "shp of obs is null");
-			}
+			if(nullptr == shp) nullShpInObsEx(ET);
 			shp->move(dx, dy);
 		}
 		return * this;
@@ -150,15 +167,15 @@ public:
 	 * ~~~~~~~~~~~~ 键盘事件处理 ~~~~~~~~~~~~
 	 */
 	
-	void leftKeyPressEvent();
+	void leftKeyPressEvent(); // 代表向左的键被点下时
 	
-	void rightKeyPressEvent();
+	void rightKeyPressEvent(); // 代表向右的键被点下时
 	
-	void rotateKeyPressEvent();
+	void rotateKeyPressEvent(); // 代表旋转的键被点下时
 	
-	void downKeyPressEvent();
+	void downKeyPressEvent(); // 代表向下的键被点下时
 	
-	void downKeyReleaseEvent();
+	void downKeyReleaseEvent(); // 代表向下的键弹起时
 	
 	/**
 	 * ~~~~~~~~~~~~ 改 ~~~~~~~~~~~~
@@ -172,9 +189,6 @@ public:
 	 * 下落形状停止下落，其他不变。 */
 	void pause();
 	
-	/** 终止游戏 */
-	void stop();
-	
 	/**
 	 * ================ 情景处理 ================
 	 */
@@ -183,21 +197,13 @@ public:
 	 * ~~~~~~~~~~~~ 定时事件处理 ~~~~~~~~~~~~
 	 */
 	
-	/** GameDlg的timerEvent()函数直接调用本函数：
-	 * @param ev：不能为nullptr。 */
-	void timerEvent(QTimerEvent * ev);
+	/** 下落计时器到时时：
+	 * 由前端的GameDlg负责信号和槽的连接，前端槽函数调用本函数。 */
+	void onFallTmOut();
 	
-	/**
-	 * ~~~~~~~~~~~~ 过关 ~~~~~~~~~~~~
-	 */
+	GamePanel & pass(); // 过关
 	
-	GamePanel & pass();
-	
-	/**
-	 * ~~~~~~~~~~~~ 游戏结束 ~~~~~~~~~~~~
-	 */
-	
-	void gameOver();
+	void gameOver(); // 游戏结束
 	
 	/**
 	 * ~~~~~~~~~~~~ 增 ~~~~~~~~~~~~
@@ -208,7 +214,7 @@ public:
 	 * @param rows：要消行的行号集合，不能为空。 */
 	inline GamePanel & addScore(const QVector<int> & rows) {
 		if(rows.isEmpty()) return * this;
-		int score = pow(2, rows.size() - 1);
+		qulonglong score = pow(2, rows.size() - 1);
 		m_score += score;
 		m_totalScore += score;
 		return * this;
@@ -247,9 +253,84 @@ public:
 	
 	/** 换新的下落形状：
 	 * 1, 前提：下一形状面板的指针m_np不能为nullptr。
-	 * 2, 原下落形状自动变成障碍物。
-	 * 3, 替换完后会根据情况恢复定时器。 */
+	 * 2, 原下落形状自动并入到障碍物。 */
 	GamePanel & nextFaller();
+	
+	/**
+	 * ================ 异常 ================
+	 */
+	
+	/** 1, 将抛异常封装成函数，可统一异常描述信息，也便于统计本类一共有几种异常、每种抛异常的代码在什么地方。
+	 * 2, @param ttl ：异常标题，即抛出异常代码所在的源码文件、函数、行号。调用该函数时传参统一用宏“ET”（详见Exception.h）即可。 */
+	
+	/** 障碍物里有NULL的形状指针 */
+	inline void nullShpInObsEx(const QString & ttl) const {
+		throw ExTemp<NullPtrEx>(ttl, this, "shape in obstracts is null");
+	}
+	
+	/** 障碍物里有NULL的格子指针 */
+	inline void nullLtcInObsEx(const QString & ttl, const Shape & shp) const {
+		QString msg("member lattice of shape(0x");
+		msg += QString::number((long)& shp, 16);
+		msg += ") in obs is null";
+		throw ExTemp<NullPtrEx>(ttl, this, msg);
+	}
+	
+	/** 空下落形状的指针为NULL */
+	inline void nullFallerEx(const QString & ttl) const {
+		throw ExTemp<NullPtrEx>(ttl, this, "faller is null");
+	}
+	
+	/** 下落形状的格子指针为NULL */
+	inline void nullLtcInFallerEx(const QString & ttl) const {
+		throw ExTemp<NullPtrEx>(ttl, this, "lattice of faller is null");
+	}
+	
+	/** 下落形状容量异常：
+	 * “下落形状里最多能放几个格子”的设定非法，如为零或-1等。*/
+	inline void fallerCapEx(const QString & ttl) const {
+		throw Exception(ttl, this, "the capacity of faller < 1");
+	}
+	
+	/** 游戏关级异常，如被设置成第零关、第-1关等 */
+	inline void gameLevelEx(const QString & ttl) const {
+		throw Exception(ttl, this, "game level < 1");
+	}
+	
+	/** 下落速度异常 */
+	inline void speedEx(const QString & ttl) const {
+		throw Exception(ttl, this, "speed < 0");
+	}
+	
+	/** 有未关闭的定时器 */
+	inline void notClosedTmrEx(const QString & ttl) const {
+		throw Exception(ttl, this, "there's a timer without closed");
+	}
+	
+	// QTimerEvent改为QTimer后可能不需要
+	
+	/** 下落定时器不是被暂停按钮关闭的 */
+	inline void fallTmrEx(const QString & ttl) const {
+		throw Exception(ttl, this, "fall timer wasn't closed by pause");
+	}
+	
+	/** 定时器状态异常 */
+	inline void tmrStateEx(const QString & ttl) const {
+		throw Exception(ttl, this, "state TMR is false but falling timer is running");
+	}
+	
+	// QTimerEvent改为QTimer后可能不需要
+	
+	/** 未知定时器异常 */
+	inline void unknownTmrEx(const QString & ttl) const {
+		throw Exception(ttl, this, "unknown timer");
+	}
+	
+	// QTimerEvent改为QTimer后可能不需要
+	
+	inline void nullNpEx(const QString & ttl) const {
+		throw ExTemp<NullPtrEx>(ttl, this, "NextPanel pointer in GamePanel is null");
+	}
 	
 	/**
 	 * ================ Getter/Setter ================
@@ -287,6 +368,10 @@ public:
 	
 	inline qulonglong passScore() const { return m_passScore; }
 	
+	inline const QTimer & fallTmr() const { return m_fallTmr; }
+	
+	inline       QTimer & fallTmr()       { return m_fallTmr; }
+	
 	inline GamePanel & setNp(NextPanel & np) {
 		m_np = & np;
 		return * this;
@@ -297,18 +382,8 @@ public:
 		return * this;
 	}
 	
-	inline bool isFalling() const { return m_state[TMR]; }
-	
-	inline bool isFastFalling() const { return m_state[TMR] && m_state[FAST]; }
-	
-	inline bool isNormalFalling() const { return m_state[TMR] && ! m_state[FAST]; }
-	
-	inline bool isPause() const { return m_state[PAUSE]; }
-	
-	inline bool isGameOver() const;
-	
 	/**
-	 * ================ 仅内部使用 ================
+	 * ================ 内部成员 ================
 	 */
 protected:
 	
@@ -331,30 +406,10 @@ protected:
 	qulonglong m_totalScore; // 总得分
 	
 	/**
-	 * -------- 游戏状态 --------
+	 * -------- 定时器 --------
 	 */
 	
-	Mask m_state; // 游戏状态标记集
-	
-	/** 游戏状态下标：
-	 * 1, 枚举值为指定状态的下标，如：
-	 * . 判断是否暂停，m_state[PAUSE]为true即为真，否则为假。
-	 * 2, 设置状态用setVal()，如：
-	 * . 改为暂停状态：m_state.setVal(PAUSE, true); */
-	enum StateIndex {
-		TMR = 0, // 是否有定时器正在运行
-		FAST = 1, // 定时器是否是快速的（按过Down键后由普通速度变为快速）
-		PAUSE = 2, // 是否暂停
-		PRESSED = 3, // 本轮下落是否按过Down键
-		PRESSING = 4, // Down键是否是按下状态（仅下落形状触底后恢复定时器时才有用）
-		GAME_OVER = 5 // 下落形状已无法再下落
-	};
-	
-	/**
-	 * -------- 业务逻辑辅助 --------
-	 */
-	
-	int m_fallTmr; // 下落定时器的ID
+	QTimer m_fallTmr; // 下落定时器
 	
 	/**
 	 * -------- 关系 --------
@@ -383,8 +438,9 @@ protected:
 	
 	/**
 	 * ~~~~~~~~~~~~ 初始化游戏 ~~~~~~~~~~~~
-	 * 也是Setter。
 	 */
+	
+	GamePanel & init(int level);
 	
 	/** 根据关数设置障碍物的初始形状：
 	 * 1, @param level：第几关，必须 ≥ 1 。
@@ -401,8 +457,8 @@ protected:
 	 * 1, 计算本局下落形状的下降速度。
 	 * 2, @param level：第几关，必须 ≥ 1 。 */
 	inline GamePanel & setSpeed(const int level) {
-		m_speed = SLOWEST * pow(SPEED_RATE, level - 1);
-		if(m_speed < FASTEST) m_speed = FASTEST;
+		m_speed = (int)(SLOWEST_SPEED * pow(SPEED_RATE, level - 1));
+		if(m_speed < FASTEST_SPEED) m_speed = FASTEST_SPEED;
 		return * this;
 	}
 	
@@ -410,7 +466,7 @@ protected:
 	 * 1, 本局得分需要达到多少才能过关。
 	 * @param level：第几关，必须 ≥ 1。 */
 	inline GamePanel & setPassScore(const int level) {
-		m_passScore = level * PASS_RATE * PASS_SCORE;
+		m_passScore = (qulonglong)(level * PASS_RATE * PASS_SCORE);
 		return * this;
 	}
 	

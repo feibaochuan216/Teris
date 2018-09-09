@@ -7,23 +7,17 @@
  * @date 2018.07.27
  * @author 张良尧 */
 
-#include "Service.h"
+#include "RelatObject.h"
 #include "Lattice.h"
-#include "../exception/NullParentException.h"
+#include "../exception/ExTemp.h"
 #include <QLinkedList> // 形状的格子集合
 #include <QPoint> // 更新尺寸时需要
 #include <QVector> // 消行时需要
 
 extern int LTC_SZ;
 
-class Shape : public Service {
+class Shape : public RelatObject {
 public:
-	
-	/**
-	 * ================ 公有成员变量 ================
-	 */
-	
-	static const QString m_exMsg; // 成员格子为NULL时的异常提示语
 	
 	/**
 	 * ================ 构造、析构 ================
@@ -32,14 +26,14 @@ public:
 	/** 生成随机形状：
 	 * 1, 游戏配置为固定大小时，形状大小为SHP_SZ。
 	 * 2, 游戏配置为变长形状时，容量为1～SHP_SZ的随机数。 */
-	Shape(Service * parent);
+	Shape(RelatObject * parent);
 	
 	/** 指定宽高：
 	 * 1, 主要用于生成障碍物。
 	 * 2, @param w：宽度，必须 > 0 且 ≤ 游戏面板的宽度。
 	 * 3, @param h：高度：必须 > 0 且 ≤ OBS_MAX。
 	 * 4, @param parent：游戏面板的地址。 */
-	Shape(const int w, const int h, Service * parent);
+	Shape(const int w, const int h, RelatObject * parent);
 	
 	/** 拷贝构造：
 	 * 1, 深拷贝。新形状的格子和参数形状的格子完全是两个对象。
@@ -47,7 +41,7 @@ public:
 	Shape(const Shape & that);
 	
 	/** 拷贝但指定父对象的构造 */
-	Shape(const Shape & that, Service * parent);
+	Shape(const Shape & that, RelatObject * parent);
 	
 	~Shape();
 	
@@ -83,9 +77,7 @@ public:
 	
 	inline bool isOverlap(const Lattice & ltc) const {
 		foreach(const Lattice * mbr, m_ls) {
-			if(nullptr == mbr) {
-				throw NullPtrException(EX_TTL, this, m_exMsg);
-			}
+			if(nullptr == mbr) nullMbrLtcEx(ET);
 			if(mbr->xig() == ltc.xig() && mbr->yig() == ltc.yig()) {
 				return true;
 			}
@@ -219,7 +211,18 @@ public:
 	inline       QLinkedList<Lattice *> ls()       { return m_ls; }
 	
 	/**
-	 * ================ 仅内部使用 ================
+	 * ================ 异常 ================
+	 * 1, 将抛异常封装成函数，可统一异常描述信息，也便于统计本类一共有几种异常、每种抛异常的代码在什么地方。
+	 * 2, @param ttl ：异常标题，即抛出异常代码所在的源码文件、函数、行号。调用该函数时传参统一用宏“ET”（详见Exception.h）即可。
+	 */
+	
+	/** 成员格子的指针为NULL指针 */
+	inline void nullMbrLtcEx(const QString & tll) const {
+		throw ExTemp<NullPtrEx>(tll, this, "member lattice is null");
+	}
+	
+	/**
+	 * ================ 内部成员 ================
 	 */
 protected:
 	

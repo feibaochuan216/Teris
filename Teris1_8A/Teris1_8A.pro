@@ -25,39 +25,31 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
     exception/Exception.cpp \
-    exception/GeomException.cpp \
-    exception/NullParentException.cpp \
-    exception/NullPtrException.cpp \
-    exception/OutRangeException.cpp \
-    exception/OutRangeGeomException.cpp \
     lib/Mask.cpp \
     lib/Tools.cpp \
     service/GamePanel.cpp \
     service/Lattice.cpp \
     service/NextPanel.cpp \
-    service/Service.cpp \
     service/Shape.cpp \
     show/GameDlg.cpp \
     show/SetDlg.cpp \
-    config.cpp
+    config.cpp \
+    service/RelatObject.cpp \
+    exception/ExTemp.cpp
 
 HEADERS += \
     exception/Exception.h \
-    exception/GeomException.h \
-    exception/NullParentException.h \
-    exception/NullPtrException.h \
-    exception/OutRangeException.h \
-    exception/OutRangeGeomException.h \
     lib/Mask.h \
     lib/Tools.h \
     service/GamePanel.h \
     service/Lattice.h \
     service/NextPanel.h \
-    service/Service.h \
     service/Shape.h \
     show/GameDlg.h \
     show/SetDlg.h \
-    config.h
+    config.h \
+    service/RelatObject.h \
+    exception/ExTemp.h
 
 FORMS += \
         GameDlg.ui \

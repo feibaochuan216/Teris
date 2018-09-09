@@ -23,49 +23,49 @@ public:
 	 * ================ 绘制 ================
 	 */
 	
-	void paintEvent(QPaintEvent * ev);
-	
-	void paint(const Lattice & ltc, QPainter & painter);
-	
-	void paint(const Shape & shp, QPainter & painter);
-	
-	void paintFaller(QPainter & painter);
-	
-	void paintGp(QPainter & painter);
-	
-	void paintNp(QPainter & painter);
+	void paintEvent(QPaintEvent * ev); // 绘制事件
 	
 	/**
-	 * ================ 定时事件处理 ================
+	 * ~~~~~~~~~~~~ 底层实现 ~~~~~~~~~~~~
 	 */
 	
-	void timerEvent(QTimerEvent * ev);
+	void paint(const Lattice & ltc, QPainter & painter); // 绘制格子
+	
+	void paint(const Shape & shp, QPainter & painter); // 绘制形状
+	
+	void paintFaller(QPainter & painter); // 绘制下落形状
+	
+	void paintGp(QPainter & painter); // 绘制游戏面板
+	
+	void paintNp(QPainter & painter); // 绘制下一形状面板
 	
 	/**
 	 * ================ 键盘事件处理 ================
 	 */
 	
-	void keyPressEvent(QKeyEvent * ev);
+	void keyPressEvent(QKeyEvent * ev); // 有按键按下时
 	
-	void keyReleaseEvent(QKeyEvent * ev);
+	void keyReleaseEvent(QKeyEvent * ev); // 有按键弹起时
 	
 	/**
 	 * ================ 槽 ================
 	 */
 public slots:
-	void start();
+	void start(); // 点击开始按钮时
 	
-	void pause();
+	void pause(); // 点击暂停按钮时
 	
-	void setDlg();
+	void onFallTmOut(); // 下落计时器到时时
 	
-	void exit();
+	void setDlg(); // 点击设置按钮时
+	
+	void exit(); // 点击退出按钮时
 	
 	/**
 	 * ================ 动画效果 ================
 	 */
 	
-	void gameOver();
+	void gameOver(); // 游戏结束
 	
 	/**
 	 * ================ Getter/Setter ================
@@ -92,9 +92,8 @@ private:
 	
 	Ui::GameDlg * ui;
 	
-	GamePanel * gp;
-	NextPanel * np;
-	
+	GamePanel * gp; // 游戏面板的业务逻辑
+	NextPanel * np; // 下一形状面板的业务逻辑
 };
 
 #endif // GAMEDLG_H

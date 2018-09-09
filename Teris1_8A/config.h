@@ -17,8 +17,8 @@ using namespace std;
  * ================ 逻辑规则 ================
  */
 
-const int SLOWEST = 2000; // 最慢下降速度，即第1关的初始速度，每下降一格需要的毫秒数，默认为2秒
-const int FASTEST = 20; // 最快下隆速度，每20毫秒下隆一格
+const int SLOWEST_SPEED = 2000; // 最慢下降速度，即第1关的初始速度，每下降一格需要的毫秒数，默认为2秒
+const int FASTEST_SPEED = 20; // 最快下隆速度，每20毫秒下隆一格
 const double SPEED_RATE = 0.9; // speed time attenuation rate，每过一关的速度增长率（所花的毫秒数衰减）
 
 /** 枚举在比较时报错 */

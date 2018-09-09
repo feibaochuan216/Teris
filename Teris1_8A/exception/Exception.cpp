@@ -4,15 +4,9 @@
  * ================ 构造、析构 ================
  */
 
-Exception::Exception(
-		const QString & file, const QString & func, const int line,
-		const void * thisPtr, const QString & msg/* = ""*/) noexcept
+Exception::Exception(const QString & ttl, const void * thisPtr, const QString & msg/* = ""*/) noexcept
 	: m_title("Exception in "), m_msg() {
-	m_title += file;
-	m_title += " : ";
-	m_title += func;
-	m_title += "() : ";
-	m_title += QString::number(line);
+	m_title += ttl;
 	m_title += " : 0x";
 	m_title += QString::number((ulong)thisPtr, 16);
 	m_title += " :\n";

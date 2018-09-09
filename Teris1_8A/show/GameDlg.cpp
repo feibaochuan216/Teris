@@ -13,7 +13,11 @@ extern int LTC_SZ;
 extern int SHP_SZ;
 
 GameDlg::GameDlg(QWidget * parent/* = nullptr*/)
-	: QDialog(parent), ui(new Ui::GameDlg), gp(new GamePanel(15)), np(new NextPanel) {
+	: QDialog(parent), ui(new Ui::GameDlg),
+	  
+	  gp(new GamePanel(9)), // 测试第9关
+	  
+	  np(new NextPanel) {
 	ui->setupUi(this);
 	
 	/* 初始化显示模块与业务逻辑模块之间的传递者 */
@@ -29,6 +33,7 @@ GameDlg::GameDlg(QWidget * parent/* = nullptr*/)
 	
 	connect(ui->startBtn, SIGNAL(clicked()), this, SLOT(start()));
 	connect(ui->pauseBtn, SIGNAL(clicked()), this, SLOT(pause()));
+	connect(& gp->fallTmr(), SIGNAL(timeout()), this, SLOT(onFallTmOut()));
 	connect(ui->setBtn, SIGNAL(clicked()), this, SLOT(setDlg()));
 	connect(ui->exitBtn, SIGNAL(clicked()), this, SLOT(exit()));
 }
@@ -58,6 +63,10 @@ void GameDlg::paintEvent(QPaintEvent *) {
 	paintNp(painter);
 }
 
+/**
+ * ~~~~~~~~~~~~ 底层实现 ~~~~~~~~~~~~
+ */
+
 void GameDlg::paint(const Lattice & ltc, QPainter & painter) {
 	painter.drawRect(QRect(ltc.xPix(), ltc.yPix(), LTC_SZ, LTC_SZ));
 }
@@ -71,7 +80,7 @@ void GameDlg::paint(const Shape & shp, QPainter & painter) {
 void GameDlg::paintFaller(QPainter & painter) {
 	foreach(const Lattice * ltc, gp->faller().ls()) {
 		if(nullptr == ltc) {
-			throw NullPtrException(EX_TTL, this, "lattice of faller is null");
+			gp->nullLtcInFallerEx(ET);
 		}
 		if(! gp->isOut(* ltc)) paint(* ltc, painter);
 	}
@@ -89,14 +98,6 @@ void GameDlg::paintNp(QPainter & painter) {
 }
 
 /**
- * ================ 定时事件处理 ================
- */
-
-void GameDlg::timerEvent(QTimerEvent * ev) {
-	gp->timerEvent(ev);
-}
-
-/**
  * ================ 键盘事件处理 ================
  */
 
@@ -111,7 +112,7 @@ void GameDlg::keyPressEvent(QKeyEvent * ev) {
 	} else if(Qt::Key_Down == key || Qt::Key_S == key) {
 		gp->downKeyPressEvent();
 	} else if(Qt::Key_Space == key || Qt::Key_Enter == key) {
-		if(gp->isPause()) start();
+		if(gp->state[GamePanel::IsPause]) start();
 		else pause();
 	}
 }
@@ -137,6 +138,10 @@ void GameDlg::pause() {
 	ui->startBtn->setEnabled(true);
 	ui->pauseBtn->setEnabled(false);
 	gp->pause();
+}
+
+void GameDlg::onFallTmOut() {
+	gp->onFallTmOut();
 }
 
 void GameDlg::setDlg() {

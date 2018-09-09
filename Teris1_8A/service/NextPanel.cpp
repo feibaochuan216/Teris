@@ -1,11 +1,12 @@
 #include "NextPanel.h"
+#include "../show/GameDlg.h"
 
 /**
  * ================ 构造、析构 ================
  */
 
-NextPanel::NextPanel(Service * parent/* = nullptr*/)
-	: Service(parent), m_shp(new Shape(nullptr)),
+NextPanel::NextPanel(RelatObject * parent/* = nullptr*/)
+	: RelatObject(parent), m_shp(new Shape(nullptr)),
 	  m_client(nullptr) { // 必须为NULL，防止循环构造
 	m_shp->setParent(this);
 }
@@ -41,8 +42,8 @@ int NextPanel::heightPix() const {
 
 void NextPanel::print(const int level/* = 0*/) const {
 	indent(level);
-	cout << "NextPanel: " << this << " = {parent: " << m_parent
-		 << ", client: " << m_client << " = \'"
+	cout << "NextPanel(" << this << "):{parent: " << m_parent
+		 << ", client(" << m_client << "): \'"
 		 << m_client->objectName().toStdString() << "\'," << endl;
 	m_shp->print(level + 1);
 	indent(level);

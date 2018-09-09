@@ -1,27 +1,28 @@
 #ifndef EXCEPTION_H
 #define EXCEPTION_H
 
+#include <QString>
+#include <iostream>
+using namespace std;
+
+#define ET QString(QString(__FILE__) + ": " + QString(__func__) + "() line " + QString::number(__LINE__) + ": ")
+// Exception Message Titles，宏定义，异常信息的标题，显示报异常的代码所在文件、函数和行号
+
 /** 所有异常的基类：
  * @version 1.7B
  * @date 2018.07.29
  * @author 张良尧 */
-
-#include <QString>
-#include <iostream>
-
-#define EX_TTL __FILE__, __func__, __LINE__ // Exception Message Titles
-
-using namespace std;
-
 class Exception : exception {
 public:
 	/**
 	 * ================ 构造、析构 ================
 	 */
 	
+	/** 1, @param ttl：标题，即抛出异常代码在哪个源码文件、哪个函数、哪个行号。
+	 * 2, @param thisPtr ：抛出异常的对象的地址。
+	 * 3, @param msg ：异常描述信息。 */
 	Exception(
-			const QString & file, const QString & func, const int line,
-			const void * thisPtr, const QString & msg = "") noexcept;
+			const QString & ttl, const void * thisPtr, const QString & msg = "") noexcept;
 	
 	virtual ~Exception() noexcept;
 	
@@ -78,10 +79,10 @@ protected:
 	
 	/**
 	 * ~~~~~~~~~~~~ 构造 ~~~~~~~~~~~~
+	 * 用于子类。
 	 */
 	
 	Exception(const QString & title) noexcept;
-	
 };
 
 #endif // EXCEPTION_H
