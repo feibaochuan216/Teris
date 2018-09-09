@@ -39,7 +39,7 @@ void LoginDialog::paintEvent(QPaintEvent *)
     QPainter painter(this);
     QRect rcImage = ui->frame->frameRect();
     rcImage.translate(ui->frame->pos());
-    QImage image(":/timg.jpg");
+    QImage image(":/picture/timg.jpg");
     painter.drawImage(rcImage,image);
 
 }
