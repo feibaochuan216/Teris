@@ -391,6 +391,18 @@ GamePanel & GamePanel::nextFaller() {
 }
 
 /**
+ * ~~~~~~~~~~~~ 作弊 ~~~~~~~~~~~~
+ */
+
+void GamePanel::cheat() {
+	Shape * oldFaller = m_faller;
+	nextFaller();
+	m_obs.removeLast();
+	delete oldFaller;
+	m_faller->move2((m_w - m_faller->width()) / 2, 0);
+}
+
+/**
  * ================ 仅内部使用 ================
  */
 

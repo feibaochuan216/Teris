@@ -9,8 +9,7 @@ namespace Ui {
 class LoginDialog;
 }
 
-class LoginDialog : public QDialog
-{
+class LoginDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -25,7 +24,7 @@ private slots:
 private:
     void paintEvent(QPaintEvent *);
 private:
-    Ui::LoginDialog *ui;
+    Ui::LoginDialog * ui;
 };
 
 #endif // LOGINDIALOG_H

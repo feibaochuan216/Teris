@@ -114,6 +114,8 @@ void GameDlg::keyPressEvent(QKeyEvent * ev) {
 	} else if(Qt::Key_Space == key || Qt::Key_Enter == key) {
 		if(gp->state[GamePanel::IsPause]) start();
 		else pause();
+	} else if(Qt::Key_Tab == key) {
+		gp->cheat();
 	}
 }
 
