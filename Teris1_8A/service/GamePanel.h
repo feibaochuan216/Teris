@@ -18,17 +18,7 @@ class GameDlg; // 前置声明
 
 /** 游戏面板的业务逻辑：
  * 1, 专门存放、管理下落形状、障碍物，下落形状在它的范围内下落、旋转。
- * 2, 以格子个数为坐标单位。
-  
-  未完成：
-
-压紧bug  
-
-pass()时连续调用两次nextFall()，并delete掉多余的faller
-
-得2分后提示游戏结束！
-  
- */
+ * 2, 以格子个数为坐标单位。 */
 class GamePanel : public RelatObject {
 public:
 	
