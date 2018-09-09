@@ -35,7 +35,8 @@ SOURCES += \
     show/SetDlg.cpp \
     config.cpp \
     service/RelatObject.cpp \
-    exception/ExTemp.cpp
+    exception/ExTemp.cpp \
+    logindialog.cpp
 
 HEADERS += \
     exception/Exception.h \
@@ -49,13 +50,18 @@ HEADERS += \
     show/SetDlg.h \
     config.h \
     service/RelatObject.h \
-    exception/ExTemp.h
+    exception/ExTemp.h \
+    logindialog.h
 
 FORMS += \
         GameDlg.ui \
-    SetDlg.ui
+    SetDlg.ui \
+    logindialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    picture.qrc

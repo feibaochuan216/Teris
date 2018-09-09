@@ -240,9 +240,7 @@ int Shape::rmRows(const QVector<int> & rows) {
 		} // 遍历rows
 	} // 遍历m_ls
 	if(cnt > 0 && ! m_ls.isEmpty()) {
-		QPoint offset = updSz();
-		updAlign(offset);
-		move(-offset.x(), -offset.y());
+		updSzNPos(); // 更新一下形状尺寸及所有格子的位置
 	}
 	return cnt;
 }
@@ -268,6 +266,13 @@ bool Shape::rm(const int row, const int col) {
 /**
  * ================ 改 ================
  */
+
+Shape & Shape::updSzNPos() {
+	QPoint offset = updSz();
+	updAlign(offset);
+	move(offset.x(), offset.y());
+	return * this;
+}
 
 QPoint Shape::updSz() {
 	int max_x = 0, max_y = 0, min_x = m_cap, min_y = m_cap;

@@ -123,31 +123,17 @@ QVector<int> GamePanel::fullRows() {
 	if(nullptr == m_faller) nullFallerEx(ET);
 	foreach(const Lattice * ltc, m_faller->ls()) {
 		if(nullptr == ltc) nullLtcInFallerEx(ET);
-		map.insert(ltc->y(), map.value(ltc->y()) + 1);
+		map.insert(ltc->yig(), map.value(ltc->yig()) + 1);
 	}
 	if(! m_obs.isEmpty()) {
 		foreach(const Shape * shp, m_obs) {
 			if(nullptr == shp) nullShpInObsEx(ET);
 			foreach(const Lattice * ltc, shp->ls()) {
 				if(nullptr == ltc) nullLtcInObsEx(ET, * shp);
-				map.insert(ltc->y(), map.value(ltc->y()) + 1);
+				map.insert(ltc->yig(), map.value(ltc->yig()) + 1);
 			}
 		}
 	}
-	
-	
-	
-	int i = 0;
-	foreach(int cnt, map) {
-		cout << cnt << " ";
-		++i;
-		if(i % m_w == 0) cout << endl;
-	}
-	cout << endl;
-	
-	//DEBUG
-	
-	
 	QVector<int> res;
 	QMapIterator<int, int> it(map);
 	while(it.hasNext()) {

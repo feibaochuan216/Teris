@@ -15,7 +15,7 @@ extern int SHP_SZ;
 GameDlg::GameDlg(QWidget * parent/* = nullptr*/)
 	: QDialog(parent), ui(new Ui::GameDlg),
 	  
-	  gp(new GamePanel(9)), // 测试第9关
+	  gp(new GamePanel(6)), // 测试第几关
 	  
 	  np(new NextPanel) {
 	ui->setupUi(this);
