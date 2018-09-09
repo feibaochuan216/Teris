@@ -350,7 +350,7 @@ void GamePanel::rm(const int row, const int col) {
 
 GamePanel & GamePanel::compact(const QVector<int> & rows) {
 	if(rows.isEmpty()) return * this;
-	if(nullptr != m_faller && ! m_faller->ls().isEmpty()) {
+	if(! m_faller->ls().isEmpty()) {
 		// 下落形状不为空（下落形状有可能在消行时被删空）
 		foreach(Lattice * ltc, m_faller->ls()) {
 			if(nullptr == ltc) nullLtcInFallerEx(ET);
@@ -361,7 +361,12 @@ GamePanel & GamePanel::compact(const QVector<int> & rows) {
 	} // 下落形状不为空
 	foreach(Shape * shp, m_obs) {
 		if(nullptr == shp) nullShpInObsEx(ET);
-		shp->rmRows(rows);
+		foreach(Lattice * ltc, shp->ls()) {
+			if(nullptr == ltc) nullLtcInFallerEx(ET);
+			for(int i = 0; i < rows.size(); ++i) {
+				if(ltc->yig() < rows[i]) ltc->move(0, 1);
+			}
+		}
 	} // 遍历障碍物
 	return * this;
 }

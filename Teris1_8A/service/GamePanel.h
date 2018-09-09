@@ -22,9 +22,11 @@ class GameDlg; // 前置声明
   
   未完成：
 
-消行时不允许delete faller，空形状就空形状，只有nextFall()时才可以delete，让faller一直保持不为nullptr  
+压紧bug  
 
 pass()时连续调用两次nextFall()，并delete掉多余的faller
+
+得2分后提示游戏结束！
   
  */
 class GamePanel : public RelatObject {
