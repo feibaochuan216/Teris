@@ -134,6 +134,17 @@ QVector<int> GamePanel::fullRows() {
 			}
 		}
 	}
+	
+	
+	
+	
+	foreach(int cnt, map) {
+		cout << cnt << endl;
+	}
+	
+	//DEBUG
+	
+	
 	QVector<int> res;
 	QMapIterator<int, int> it(map);
 	while(it.hasNext()) {
