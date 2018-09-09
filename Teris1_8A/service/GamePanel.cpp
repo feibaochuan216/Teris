@@ -137,10 +137,13 @@ QVector<int> GamePanel::fullRows() {
 	
 	
 	
-	
+	int i = 0;
 	foreach(int cnt, map) {
-		cout << cnt << endl;
+		cout << cnt << " ";
+		++i;
+		if(i % m_w == 0) cout << endl;
 	}
+	cout << endl;
 	
 	//DEBUG
 	
