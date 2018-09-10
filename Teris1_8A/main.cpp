@@ -1,6 +1,6 @@
 #include "show/GameDlg.h"
 #include <QApplication>
-#include "logindialog.h"
+#include "show/LoginDialog.h"
 
 int main(int argc, char * argv[]) {
 	QApplication a(argc, argv);

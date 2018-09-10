@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui widgets
+QT       += core gui widgets sql
 
 TARGET = Teris1_8A
 TEMPLATE = app
@@ -36,7 +36,9 @@ SOURCES += \
     config.cpp \
     service/RelatObject.cpp \
     exception/ExTemp.cpp \
-    logindialog.cpp
+    show/LoginDialog.cpp \
+    db/Usr.cpp \
+    show/GuideDlg.cpp
 
 HEADERS += \
     exception/Exception.h \
@@ -51,12 +53,15 @@ HEADERS += \
     config.h \
     service/RelatObject.h \
     exception/ExTemp.h \
-    logindialog.h
+    show/LoginDialog.h \
+    db/Usr.h \
+    show/GuideDlg.h
 
 FORMS += \
         GameDlg.ui \
     SetDlg.ui \
-    logindialog.ui
+    logindialog.ui \
+    show/GuideDlg.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

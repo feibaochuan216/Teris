@@ -1,4 +1,5 @@
 #include "config.h"
+#include "lib/Mask.h"
 /** 配置参数：
  * 1, 游戏的全局常量集中存放在这里，如果想修改游戏的性能只需修改本文件即可。
  * 2, 尝试用C语言失败后，改尝试C++。先做最基本的功能。
@@ -10,6 +11,12 @@ using namespace std;
 /**
  * ================ 逻辑规则 ================
  */
+
+enum GlobalFlg { // 全局布尔值数组下标所代表的含义
+	P2 = 0, // 是否是双人游戏
+	GlobalFlgSz = 1 // 全局布尔值数组的长度
+};
+Mask FLG(GlobalFlgSz); // 全局布尔值数组
 
 bool FIXED_SZ = true; // fixed size，形状是否是固定大小，即它所包含的格子数是固定的；如果为否，则格子数量在1～SHP_SZ之间（包含SHP_SZ）
 

@@ -45,13 +45,19 @@ GameDlg::~GameDlg() {
 void GameDlg::paintEvent(QPaintEvent *) {
 	ui->level->setText("第 " + QString::number(gp->level()) + " 关");
 	QString score(QString::number(gp->score()));
-	for(int i = score.size() - 1; i > 0; i -= 3) {
-		score.insert(i, ',');
+	/* 分数字符很长时，用逗号分隔 */
+	if(score.size() > 3) {
+		for(int i = score.size() - 3; i > 0; i -= 3) {
+			score.insert(i, ',');
+		}
 	}
 	ui->score->setText(score);
 	score = QString::number(gp->totalScore());
-	for(int i = score.size() - 1; i > 0; i -= 3) {
-		score.insert(i, ',');
+	/* 分数字符很长时，用逗号分隔 */
+	if(score.size() > 3) {
+		for(int i = score.size() - 3; i > 0; i -= 3) {
+			score.insert(i, ',');
+		}
 	}
 	ui->totalScore->setText(score);
 	
