@@ -16,7 +16,9 @@ class GameDlg : public QDialog {
 	Q_OBJECT
 	
 public:
-	explicit GameDlg(QWidget * parent = nullptr);
+	
+	/** @param level ：指定第几关。 */
+	explicit GameDlg(int level, QWidget * parent = nullptr);
 	~GameDlg();
 	
 	/**

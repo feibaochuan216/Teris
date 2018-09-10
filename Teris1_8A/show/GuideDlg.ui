@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>195</width>
-    <height>172</height>
+    <width>193</width>
+    <height>170</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>导航</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
@@ -37,16 +37,16 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="p2Btn">
+      <widget class="QPushButton" name="loadBtn">
        <property name="text">
-        <string>双人游戏</string>
+        <string>加载存档</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="loadBtn">
+      <widget class="QPushButton" name="mgBtn">
        <property name="text">
-        <string>加载存档</string>
+        <string>后台管理</string>
        </property>
       </widget>
      </item>

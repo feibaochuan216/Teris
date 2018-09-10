@@ -38,7 +38,8 @@ SOURCES += \
     exception/ExTemp.cpp \
     show/LoginDialog.cpp \
     db/Usr.cpp \
-    show/GuideDlg.cpp
+    show/GuideDlg.cpp \
+    db/DbMgr.cpp
 
 HEADERS += \
     exception/Exception.h \
@@ -55,13 +56,14 @@ HEADERS += \
     exception/ExTemp.h \
     show/LoginDialog.h \
     db/Usr.h \
-    show/GuideDlg.h
+    show/GuideDlg.h \
+    db/DbMgr.h
 
 FORMS += \
-        GameDlg.ui \
-    SetDlg.ui \
-    logindialog.ui \
-    show/GuideDlg.ui
+    show/GuideDlg.ui \
+    show/GameDlg.ui \
+    show/LoginDialog.ui \
+    show/SetDlg.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

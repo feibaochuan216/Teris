@@ -1,7 +1,9 @@
 #ifndef USR_H
 #define USR_H
 
+#include "DbMgr.h"
 #include <QString>
+#include <QMap>
 
 class Usr {
 public:
@@ -44,6 +46,10 @@ public:
 	
 	inline void setTotalScore(qulonglong totalScore) { m_totalScore = totalScore; }
 	
+	inline const QMap<int, qulonglong> & load() const { return m_load; }
+	
+	inline       QMap<int, qulonglong> & load()       { return m_load; }
+	
 	/**
 	 * ================ 内部成员 ================
 	 */
@@ -56,8 +62,9 @@ protected:
 	QString m_usrNm; // 用户名
 	QString m_pswd; // 密码
 	UsrType m_type; // 用户类别
-	//m_load; // 存档
 	qulonglong m_totalScore; // 总分数
+	QMap<int, qulonglong> m_load; // 存档映射
+	DbMgr m_dbMgr;
 };
 
 #endif // USR_H

@@ -12,12 +12,9 @@ extern int GP_HEIGHT;
 extern int LTC_SZ;
 extern int SHP_SZ;
 
-GameDlg::GameDlg(QWidget * parent/* = nullptr*/)
+GameDlg::GameDlg(int level, QWidget * parent/* = nullptr*/)
 	: QDialog(parent), ui(new Ui::GameDlg),
-	  
-	  gp(new GamePanel(6)), // 测试第几关
-	  
-	  np(new NextPanel) {
+	  gp(new GamePanel(level)), np(new NextPanel) {
 	ui->setupUi(this);
 	
 	/* 初始化显示模块与业务逻辑模块之间的传递者 */
