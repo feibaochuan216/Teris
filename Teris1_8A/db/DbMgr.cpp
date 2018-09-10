@@ -1,5 +1,4 @@
 #include "DbMgr.h"
-#include "exception/ExTemp.h"
 #include <QMessageBox>
 #include <QSqlError>
 #include <QDebug>
@@ -13,20 +12,25 @@ QString DbMgrData::m_kvs = ":";
 QString DbMgrData::m_aes = ",";
 
 /**
- * ================ 构造 ================
+ * ================ 创建 ================
  */
-
-DbMgrData::DbMgrData() {
-	createDb();
-	createUsrTable();
-}
 
 void DbMgrData::createDb() {
 	m_db = QSqlDatabase::addDatabase("QSQLITE");
 	m_db.setDatabaseName("teris.db"); // 指定数据库文件名
 	if(false == m_db.open()) {
 		qDebug() << m_db.lastError().text();
+	} else {
+		m_open = true;
 	}
+}
+
+/**
+ * ================ 析构 ================
+ */
+
+DbMgrData::~DbMgrData() {
+	if(m_open) m_db.close();
 }
 
 void DbMgrData::createUsrTable() {
@@ -34,10 +38,23 @@ void DbMgrData::createUsrTable() {
 				"id int primary key not null,"
 				"name text not null,"
 				"pswd text not null,"
+				"type int not null,"
 				"load text);");
 		qDebug() << sql;
 		QSqlQuery query;
 		query.exec(sql);
+}
+
+/**
+ * ================ 查 ================
+ */
+
+bool DbMgrData::queryUsr(const QString & usrNm, const QString & pswd) {
+	
+	// 未完成
+	
+	
+	return false;
 }
 
 void DbMgrData::query() {
@@ -91,17 +108,17 @@ QString DbMgrData::load2Str(const QMap<int, qulonglong> & map) {
 }
 
 /**
- * ================ 异常 ================
- * 
- * 1, 将抛异常封装成函数，可统一异常描述信息，也便于统计本类一共有几种异常、每种抛异常的代码在什么地方。
- * 2, @param ttl ：异常标题，即抛出异常代码所在的源码文件、函数、行号。调用该函数时传参统一用宏“ET”（详见Exception.h）即可。
+ * ================ 内部成员 ================
  */
 
-void DbMgrData::analysisFailEx(const QString & ttl, const QString & str) {
-	throw ExTemp<DbEx>(ttl, nullptr, "string analysised: " + str);
+/**
+ * ~~~~~~~~~~~~ 构造 ~~~~~~~~~~~~
+ */
+
+DbMgrData::DbMgrData() : m_curUsrType(NormalUsr) {
+	createDb();
+	createUsrTable();
 }
-
-
 
 
 

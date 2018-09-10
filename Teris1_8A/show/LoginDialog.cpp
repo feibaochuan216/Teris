@@ -1,13 +1,14 @@
 #include "LoginDialog.h"
 #include "ui_logindialog.h"
 #include "show/GuideDlg.h"
+#include "db/DbMgr.h"
 #include <QPushButton>
 #include <QDialogButtonBox>
 #include <QPalette>
 
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent), ui(new Ui::LoginDialog),
-	m_dbMgr(DbMgrData::newDbMgr()) {
+	m_dbMgr(nullptr) {
     ui->setupUi(this);
     /*connect(ui->buttonBox,SIGNAL(accepted()),
             this,SLOT(on_buttonBox_accepted()));
@@ -29,7 +30,12 @@ LoginDialog::~LoginDialog() {
  */
 
 void LoginDialog::on_buttonBox_accepted() {
-	Usr * usr = new Usr(ui->UserEdit->text(), ui->PasswdEdit->text());
+	m_dbMgr = DbMgrData::newDbMgr();
+	
+	// 查找数据库，获取用户信息
+	
+	
+	
 	
 	
 	
@@ -39,10 +45,9 @@ void LoginDialog::on_buttonBox_accepted() {
     if(ui->UserEdit->text() == "csd1710" && ui->PasswdEdit->text() == "5211314") {
         qDebug("登录成功!");
         close();
-        GuideDlg w(usr);
+        GuideDlg w(m_dbMgr);
         w.exec();
     } else {
-		delete usr;
         QMessageBox msgbox(QMessageBox::Critical, windowTitle(), "用户名或密码有误！", QMessageBox::Ok, this);
         msgbox.setButtonText(QMessageBox::Ok, "确定");
         ui->UserEdit->setText("");

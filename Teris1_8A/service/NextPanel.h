@@ -19,7 +19,7 @@ public:
 	 * ================ 构造、析构 ================
 	 */
 	
-	NextPanel(RelatObject * parent = nullptr);
+	explicit NextPanel(RelatObject * parent = nullptr);
 	
 	/** 不允许拷贝构造 */
 private:

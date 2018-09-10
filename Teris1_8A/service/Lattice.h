@@ -17,7 +17,7 @@ public:
 	 * ================ 构造、析构 ================
 	 */
 	
-	Lattice(RelatObject * parent);
+	explicit Lattice(RelatObject * parent);
 	
 	/** 指定坐标：
 	 * 创建随机格子时需要。 */

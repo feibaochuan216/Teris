@@ -3,10 +3,12 @@
 #include "GameDlg.h"
 #include <QMessageBox>
 
-GuideDlg::GuideDlg(Usr * usr, QWidget * parent/* = nullptr*/) :
-	QDialog(parent), ui(new Ui::GuideDlg),
-	m_usr(usr) {
+GuideDlg::GuideDlg(DbMgr & dbMgr, QWidget * parent/* = nullptr*/) :
+	QDialog(parent), ui(new Ui::GuideDlg), m_dbMgr(dbMgr) {
 	ui->setupUi(this);
+	if(DbMgrData::MgrUsr != m_dbMgr->curUsrType()) {
+		ui->mgBtn->hide();
+	}
 	connect(ui->newBtn, SIGNAL(clicked()), this, SLOT(onNewBtn()));
 	connect(ui->mgBtn, SIGNAL(clicked()), this, SLOT(onMgBtn()));
 	connect(ui->loadBtn, SIGNAL(clicked()), this, SLOT(onLoadBtn()));
@@ -19,7 +21,7 @@ GuideDlg::~GuideDlg() {
 
 void GuideDlg::onNewBtn() {
 	close(); // 关闭本窗口
-	GameDlg w(1);
+	GameDlg w(m_dbMgr, 1);
 	w.exec();
 }
 
@@ -34,7 +36,7 @@ void GuideDlg::onLoadBtn() {
 				QMessageBox::Ok | QMessageBox::Cancel);
 	if(QMessageBox::Ok == btn) {
 		close(); // 关闭本窗口
-		GameDlg w(6);
+		GameDlg w(m_dbMgr, 6);
 		w.exec();
 	}
 }
@@ -44,6 +46,7 @@ void GuideDlg::onQuitBtn() {
 				this, "提示", "是否退出游戏？",
 				QMessageBox::Ok | QMessageBox::Cancel);
 	if(QMessageBox::Ok == btn) {
+		
 		close(); // 关闭窗口，退出程序
 	}
 }

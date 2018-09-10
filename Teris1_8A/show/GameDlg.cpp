@@ -12,25 +12,25 @@ extern int GP_HEIGHT;
 extern int LTC_SZ;
 extern int SHP_SZ;
 
-GameDlg::GameDlg(int level, QWidget * parent/* = nullptr*/)
-	: QDialog(parent), ui(new Ui::GameDlg),
-	  gp(new GamePanel(level)), np(new NextPanel) {
+GameDlg::GameDlg(DbMgr & dbMgr, int level, QWidget * parent/* = nullptr*/)
+	: QDialog(parent), ui(new Ui::GameDlg), m_dbMgr(dbMgr),
+	  m_gp(new GamePanel(level)), m_np(new NextPanel) {
 	ui->setupUi(this);
 	
 	/* 初始化显示模块与业务逻辑模块之间的传递者 */
-	gp->setClient(* this);
-	gp->setNp(* np);
-	np->setClient(* this);
+	m_gp->setClient(* this);
+	m_gp->setNp(* m_np);
+	m_np->setClient(* this);
 	
 	/* 初始化界面 */
-	ui->gamePanel->setMinimumSize(gp->widthPix(), gp->heightPix());
-	ui->nextPanel->setMinimumSize(np->widthPix(), np->heightPix());
+	ui->gamePanel->setMinimumSize(m_gp->widthPix(), m_gp->heightPix());
+	ui->nextPanel->setMinimumSize(m_np->widthPix(), m_np->heightPix());
 	// 下一形状面板的上、下、左、右多留一个格子的宽度
 	update();
 	
 	connect(ui->startBtn, SIGNAL(clicked()), this, SLOT(start()));
 	connect(ui->pauseBtn, SIGNAL(clicked()), this, SLOT(pause()));
-	connect(& gp->fallTmr(), SIGNAL(timeout()), this, SLOT(onFallTmOut()));
+	connect(& m_gp->fallTmr(), SIGNAL(timeout()), this, SLOT(onFallTmOut()));
 	connect(ui->setBtn, SIGNAL(clicked()), this, SLOT(setDlg()));
 	connect(ui->exitBtn, SIGNAL(clicked()), this, SLOT(exit()));
 }
@@ -40,8 +40,8 @@ GameDlg::~GameDlg() {
 }
 
 void GameDlg::paintEvent(QPaintEvent *) {
-	ui->level->setText("第 " + QString::number(gp->level()) + " 关");
-	QString score(QString::number(gp->score()));
+	ui->level->setText("第 " + QString::number(m_gp->level()) + " 关");
+	QString score(QString::number(m_gp->score()));
 	/* 分数字符很长时，用逗号分隔 */
 	if(score.size() > 3) {
 		for(int i = score.size() - 3; i > 0; i -= 3) {
@@ -49,7 +49,7 @@ void GameDlg::paintEvent(QPaintEvent *) {
 		}
 	}
 	ui->score->setText(score);
-	score = QString::number(gp->totalScore());
+	score = QString::number(m_gp->totalScore());
 	/* 分数字符很长时，用逗号分隔 */
 	if(score.size() > 3) {
 		for(int i = score.size() - 3; i > 0; i -= 3) {
@@ -81,23 +81,23 @@ void GameDlg::paint(const Shape & shp, QPainter & painter) {
 }
 
 void GameDlg::paintFaller(QPainter & painter) {
-	foreach(const Lattice * ltc, gp->faller().ls()) {
+	foreach(const Lattice * ltc, m_gp->faller().ls()) {
 		if(nullptr == ltc) {
-			gp->nullLtcInFallerEx(ET);
+			m_gp->nullLtcInFallerEx(ET);
 		}
-		if(! gp->isOut(* ltc)) paint(* ltc, painter);
+		if(! m_gp->isOut(* ltc)) paint(* ltc, painter);
 	}
 }
 
 void GameDlg::paintGp(QPainter & painter) {
 	paintFaller(painter); // 绘制下落形状
-	foreach(const Shape * shp, gp->obs()) {
+	foreach(const Shape * shp, m_gp->obs()) {
 		paint(* shp, painter);
 	}
 }
 
 void GameDlg::paintNp(QPainter & painter) {
-	paint(np->peek(), painter);
+	paint(m_np->peek(), painter);
 }
 
 /**
@@ -107,25 +107,25 @@ void GameDlg::paintNp(QPainter & painter) {
 void GameDlg::keyPressEvent(QKeyEvent * ev) {
 	const int key = ev->key();
 	if(Qt::Key_Left == key || Qt::Key_A == key) {
-		gp->leftKeyPressEvent();
+		m_gp->leftKeyPressEvent();
 	} else if(Qt::Key_Right == key || Qt::Key_D == key) {
-		gp->rightKeyPressEvent();
+		m_gp->rightKeyPressEvent();
 	} else if(Qt::Key_Up == key || Qt::Key_W == key) {
-		gp->rotateKeyPressEvent();
+		m_gp->rotateKeyPressEvent();
 	} else if(Qt::Key_Down == key || Qt::Key_S == key) {
-		gp->downKeyPressEvent();
+		m_gp->downKeyPressEvent();
 	} else if(Qt::Key_Space == key || Qt::Key_Enter == key) {
-		if(gp->state[GamePanel::IsPause]) start();
+		if(m_gp->state[GamePanel::IsPause]) start();
 		else pause();
 	} else if(Qt::Key_Tab == key) {
-		gp->cheat();
+		m_gp->cheat();
 	}
 }
 
 void GameDlg::keyReleaseEvent(QKeyEvent * ev) {
 	const int key = ev->key();
 	if(Qt::Key_Down == key || Qt::Key_S == key) {
-		gp->downKeyReleaseEvent();
+		m_gp->downKeyReleaseEvent();
 	}
 }
 
@@ -136,17 +136,17 @@ void GameDlg::keyReleaseEvent(QKeyEvent * ev) {
 void GameDlg::start() {
 	ui->startBtn->setEnabled(false);
 	ui->pauseBtn->setEnabled(true);
-	gp->start();
+	m_gp->start();
 }
 
 void GameDlg::pause() {
 	ui->startBtn->setEnabled(true);
 	ui->pauseBtn->setEnabled(false);
-	gp->pause();
+	m_gp->pause();
 }
 
 void GameDlg::onFallTmOut() {
-	gp->onFallTmOut();
+	m_gp->onFallTmOut();
 }
 
 void GameDlg::setDlg() {

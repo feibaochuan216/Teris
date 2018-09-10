@@ -3,6 +3,7 @@
 
 #include "service/GamePanel.h"
 #include "service/NextPanel.h"
+#include "../db/DbMgr.h"
 #include <QDialog>
 
 class GamePanel;
@@ -18,7 +19,7 @@ class GameDlg : public QDialog {
 public:
 	
 	/** @param level ：指定第几关。 */
-	explicit GameDlg(int level, QWidget * parent = nullptr);
+	GameDlg(DbMgr & dbMgr, int level, QWidget * parent = nullptr);
 	~GameDlg();
 	
 	/**
@@ -94,8 +95,9 @@ private:
 	
 	Ui::GameDlg * ui;
 	
-	GamePanel * gp; // 游戏面板的业务逻辑
-	NextPanel * np; // 下一形状面板的业务逻辑
+	DbMgr m_dbMgr;
+	GamePanel * m_gp; // 游戏面板的业务逻辑
+	NextPanel * m_np; // 下一形状面板的业务逻辑
 };
 
 #endif // GAMEDLG_H

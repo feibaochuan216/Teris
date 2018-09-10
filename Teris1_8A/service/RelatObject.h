@@ -21,7 +21,7 @@ public:
 	 * ================ 构造、析构 ================
 	 */
 	
-	RelatObject(RelatObject * parent);
+	explicit RelatObject(RelatObject * parent);
 	
 	/** 指定坐标：
 	 * 创建随机格子时需要。 */

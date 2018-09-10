@@ -37,7 +37,6 @@ SOURCES += \
     service/RelatObject.cpp \
     exception/ExTemp.cpp \
     show/LoginDialog.cpp \
-    db/Usr.cpp \
     show/GuideDlg.cpp \
     db/DbMgr.cpp
 
@@ -55,7 +54,6 @@ HEADERS += \
     service/RelatObject.h \
     exception/ExTemp.h \
     show/LoginDialog.h \
-    db/Usr.h \
     show/GuideDlg.h \
     db/DbMgr.h
 

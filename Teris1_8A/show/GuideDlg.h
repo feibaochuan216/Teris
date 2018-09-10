@@ -1,7 +1,7 @@
 #ifndef GUIDEDLG_H
 #define GUIDEDLG_H
 
-#include "../db/Usr.h"
+#include "../db/DbMgr.h"
 #include <QDialog>
 
 namespace Ui {
@@ -14,7 +14,7 @@ namespace Ui {
 class GuideDlg : public QDialog {
 	Q_OBJECT
 public:
-	explicit GuideDlg(Usr * usr, QWidget * parent = nullptr);
+	explicit GuideDlg(DbMgr & dbMgr, QWidget * parent = nullptr);
 	~GuideDlg();
 	
 public slots:
@@ -29,7 +29,7 @@ public slots:
 private:
 	Ui::GuideDlg * ui;
 	
-	Usr * m_usr;
+	DbMgr m_dbMgr;
 };
 
 #endif // GUIDEDLG_H

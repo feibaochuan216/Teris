@@ -42,7 +42,7 @@ public:
 	 * ================ 构造、析构 ================
 	 */
 	
-	GamePanel(const int level = 1);
+	explicit GamePanel(const int level = 1);
 	
 	/** 禁用拷贝构造 */
 private:

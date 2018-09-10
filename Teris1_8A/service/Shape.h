@@ -26,7 +26,7 @@ public:
 	/** 生成随机形状：
 	 * 1, 游戏配置为固定大小时，形状大小为SHP_SZ。
 	 * 2, 游戏配置为变长形状时，容量为1～SHP_SZ的随机数。 */
-	Shape(RelatObject * parent);
+	explicit Shape(RelatObject * parent);
 	
 	/** 指定宽高：
 	 * 1, 主要用于生成障碍物。
@@ -144,10 +144,6 @@ public:
 	 * 当形状里的格子发生变化时，可能所有格子不再靠形状的左上角对齐，让它们在形状内靠左上角对齐，而格子在面板中的位置不变。 */
 	Shape & updSzNPos();
 	
-	
-	
-	
-	
 	/** 更新尺寸：
 	 * 1, 新增、删除格子，或者旋转等操作后，重新计算形状的宽和高的值。
 	 * 2, @return ：返回一个尺寸，如果所有格子没有靠左上对齐，则返回值的x、y值体现了左上角对齐需要的偏移量。其x、y允许为负（说明格子已超出了形状的范围）。
@@ -188,6 +184,18 @@ public:
 	Shape & rotateAnti();
 	
 	/**
+	 * ================ 异常 ================
+	 * 
+	 * 1, 将抛异常封装成函数，可统一异常描述信息，也便于统计本类一共有几种异常、每种抛异常的代码在什么地方。
+	 * 2, @param ttl ：异常标题，即抛出异常代码所在的源码文件、函数、行号。调用该函数时传参统一用宏“ET”（详见Exception.h）即可。
+	 */
+	
+	/** 成员格子的指针为NULL指针 */
+	inline void nullMbrLtcEx(const QString & tll) const {
+		throw ExTemp<NullPtrEx>(tll, this, "member lattice is null");
+	}
+	
+	/**
 	 * ================ Getter/Setter ================
 	 */
 	
@@ -217,17 +225,6 @@ public:
 	inline const QLinkedList<Lattice *> ls() const { return m_ls; }
 	
 	inline       QLinkedList<Lattice *> ls()       { return m_ls; }
-	
-	/**
-	 * ================ 异常 ================
-	 * 1, 将抛异常封装成函数，可统一异常描述信息，也便于统计本类一共有几种异常、每种抛异常的代码在什么地方。
-	 * 2, @param ttl ：异常标题，即抛出异常代码所在的源码文件、函数、行号。调用该函数时传参统一用宏“ET”（详见Exception.h）即可。
-	 */
-	
-	/** 成员格子的指针为NULL指针 */
-	inline void nullMbrLtcEx(const QString & tll) const {
-		throw ExTemp<NullPtrEx>(tll, this, "member lattice is null");
-	}
 	
 	/**
 	 * ================ 内部成员 ================
