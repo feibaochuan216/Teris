@@ -50,11 +50,19 @@ void DbMgrData::createUsrTable() {
  */
 
 bool DbMgrData::queryUsr(const QString & usrNm, const QString & pswd) {
+	QString sql("select type from usr where name = '%1' and pswd = '%2'");
+	sql = sql.arg(usrNm).arg(pswd);
 	
-	// 未完成
+	qDebug() << sql;
 	
-	
-	return false;
+	QSqlQuery q(sql);
+	if(q.next()) {
+		m_curUsrType = static_cast<UsrType>(q.value(0).toInt());
+		return true;
+	} else {
+		m_curUsrType = NotExist;
+		return false;
+	}
 }
 
 void DbMgrData::query() {

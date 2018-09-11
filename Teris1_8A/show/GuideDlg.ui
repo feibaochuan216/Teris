@@ -51,6 +51,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="logoutBtn">
+       <property name="text">
+        <string>退出登录</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="quitBtn">
        <property name="text">
         <string>退出游戏</string>

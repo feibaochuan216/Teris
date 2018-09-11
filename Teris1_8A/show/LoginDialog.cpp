@@ -31,27 +31,15 @@ LoginDialog::~LoginDialog() {
 
 void LoginDialog::on_buttonBox_accepted() {
 	m_dbMgr = DbMgrData::newDbMgr();
-	
-	// 查找数据库，获取用户信息
-	
-	
-	
-	
-	
-	
-	
-	
-	
-    if(ui->UserEdit->text() == "csd1710" && ui->PasswdEdit->text() == "5211314") {
-        qDebug("登录成功!");
-        close();
-        GuideDlg w(m_dbMgr);
-        w.exec();
-    } else {
+	if(m_dbMgr->queryUsr(ui->UserEdit->text(), ui->PasswdEdit->text())) {
+		close();
+		GuideDlg w(m_dbMgr);
+		w.exec();
+	} else {
         QMessageBox msgbox(QMessageBox::Critical, windowTitle(), "用户名或密码有误！", QMessageBox::Ok, this);
         msgbox.setButtonText(QMessageBox::Ok, "确定");
-        ui->UserEdit->setText("");
-        ui->PasswdEdit->setText("");
+//        ui->UserEdit->setText("");
+//        ui->PasswdEdit->setText("");
         msgbox.exec();
     }
 }

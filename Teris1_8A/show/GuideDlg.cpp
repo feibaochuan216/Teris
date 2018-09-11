@@ -1,6 +1,7 @@
 #include "GuideDlg.h"
 #include "ui_GuideDlg.h"
 #include "GameDlg.h"
+#include "LoginDialog.h"
 #include <QMessageBox>
 
 GuideDlg::GuideDlg(DbMgr & dbMgr, QWidget * parent/* = nullptr*/) :
@@ -12,6 +13,7 @@ GuideDlg::GuideDlg(DbMgr & dbMgr, QWidget * parent/* = nullptr*/) :
 	connect(ui->newBtn, SIGNAL(clicked()), this, SLOT(onNewBtn()));
 	connect(ui->mgBtn, SIGNAL(clicked()), this, SLOT(onMgBtn()));
 	connect(ui->loadBtn, SIGNAL(clicked()), this, SLOT(onLoadBtn()));
+	connect(ui->logoutBtn, SIGNAL(clicked()), this, SLOT(onLogoutBtn()));
 	connect(ui->quitBtn, SIGNAL(clicked()), this, SLOT(onQuitBtn()));
 }
 
@@ -37,6 +39,17 @@ void GuideDlg::onLoadBtn() {
 	if(QMessageBox::Ok == btn) {
 		close(); // 关闭本窗口
 		GameDlg w(m_dbMgr, 6);
+		w.exec();
+	}
+}
+
+void GuideDlg::onLogoutBtn() {
+	QMessageBox::StandardButton btn = QMessageBox::question(
+				this, "提示", "是否退出登录？",
+				QMessageBox::Ok | QMessageBox::Cancel);
+	if(QMessageBox::Ok == btn) {
+		close();
+		LoginDialog w;
 		w.exec();
 	}
 }

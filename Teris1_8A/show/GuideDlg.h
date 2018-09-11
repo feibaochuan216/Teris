@@ -24,6 +24,8 @@ public slots:
 	
 	void onLoadBtn(); // 加载存档按钮被点时
 	
+	void onLogoutBtn(); // 登出按钮被点时
+	
 	void onQuitBtn(); // 退出游戏按钮被点时
 	
 private:
