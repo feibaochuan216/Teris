@@ -10,6 +10,10 @@ namespace Ui {
 	class LoginDialog;
 }
 
+/** 登录对话框：
+ * @version 1.8A
+ * @date 2018.09.11
+ * @author 于延泽 */
 class LoginDialog : public QDialog {
     Q_OBJECT
 

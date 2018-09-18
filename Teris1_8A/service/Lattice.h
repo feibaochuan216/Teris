@@ -80,6 +80,23 @@ public:
 	}
 	
 	/**
+	 * ================ 其他 ================
+	 */
+	
+	/** 解析游戏存档的字符串转换成格子 */
+//	static Lattice * anlys(const QString & str);
+	
+	
+	// 未完成
+	
+	
+	/** 反解析成游戏存档的数据 */
+	inline QString toSaveStr() const {
+		QString res(QString::number(m_x) + ':' + QString::number(m_y));
+		return res;
+	}
+	
+	/**
 	 * ================ 调试 ================
 	 */
 #ifndef DEBUG

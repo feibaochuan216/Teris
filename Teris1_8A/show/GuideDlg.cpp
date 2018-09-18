@@ -2,12 +2,13 @@
 #include "ui_GuideDlg.h"
 #include "GameDlg.h"
 #include "LoginDialog.h"
+#include "../db/Usr.h"
 #include <QMessageBox>
 
-GuideDlg::GuideDlg(DbMgr & dbMgr, QWidget * parent/* = nullptr*/) :
-	QDialog(parent), ui(new Ui::GuideDlg), m_dbMgr(dbMgr) {
+GuideDlg::GuideDlg(DbMgr & dbMgr, QWidget * parent/* = nullptr*/)
+	: QDialog(parent), ui(new Ui::GuideDlg), m_dbMgr(dbMgr) {
 	ui->setupUi(this);
-	if(DbMgrData::MgrUsr != m_dbMgr->curUsrType()) {
+	if(UsrData::MgrUsr != m_dbMgr->usr()->type()) {
 		ui->mgBtn->hide();
 	}
 	connect(ui->newBtn, SIGNAL(clicked()), this, SLOT(onNewBtn()));

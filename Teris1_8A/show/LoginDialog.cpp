@@ -30,18 +30,23 @@ LoginDialog::~LoginDialog() {
  */
 
 void LoginDialog::on_buttonBox_accepted() {
-	m_dbMgr = DbMgrData::newDbMgr();
-	if(m_dbMgr->queryUsr(ui->UserEdit->text(), ui->PasswdEdit->text())) {
-		close();
-		GuideDlg w(m_dbMgr);
-		w.exec();
+	if(nullptr == m_dbMgr) {
+		m_dbMgr = DbMgrData::newDbMgr(ui->UserEdit->text(), ui->PasswdEdit->text());
 	} else {
-        QMessageBox msgbox(QMessageBox::Critical, windowTitle(), "用户名或密码有误！", QMessageBox::Ok, this);
+		m_dbMgr->queryUsr(
+					ui->UserEdit->text(), ui->PasswdEdit->text());
+	}
+	if(nullptr == m_dbMgr->usr()) { // 没找到对应的用户
+		QMessageBox msgbox(QMessageBox::Critical, windowTitle(), "用户名或密码有误！", QMessageBox::Ok, this);
         msgbox.setButtonText(QMessageBox::Ok, "确定");
 //        ui->UserEdit->setText("");
 //        ui->PasswdEdit->setText("");
         msgbox.exec();
-    }
+	} else { // 找到了对应的用户
+		close();
+		GuideDlg w(m_dbMgr);
+		w.exec();
+	}
 }
 void LoginDialog::on_buttonBox_rejected() {
     close();
