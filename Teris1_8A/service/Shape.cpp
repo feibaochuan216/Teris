@@ -4,17 +4,12 @@
 #include "Shape.h"
 #include "NextPanel.h"
 #include "../lib/Tools.h"
-#include <QDebug>
 #include <iostream>
+#include <QDebug>
 using namespace std;
 
 extern int SHP_SZ; // 配置文件中要求的形状默认大小
 extern const bool FIXED_SZ; // config.cpp，下落形状是否是固定大小
-
-/**
- * ================ 公有成员变量 ================
- */
-
 
 /**
  * ================ 构造、析构 ================
@@ -327,8 +322,55 @@ Shape & Shape::rotateAnti() {
 }
 
 /**
+ * ================ 其他 ================
+ */
+
+Shape * Shape::anlys(const QString & load, int * cur, RelatObject * parent) {
+	/* 获取表示形状的容量大小的字符串的首尾位置 */
+	* cur = load.indexOf(KEY_VAL_SEP, * cur) + 1;
+	int end = load.indexOf(ARR_ELMT_SEP, * cur);
+	
+	qDebug() << "loading shp:" << load.mid(* cur, end);
+	
+	int cap = load.mid(* cur, end).toInt();
+	if(cap <= 0) anlysEx(ET, cap); // 抛解析异常
+	Shape * res = new Shape(parent, cap);
+	for(int i = 0; i < cap; ++i) {
+		* cur = end + 1;
+		Lattice * ltc = Lattice::anlys(load, cur, res);
+		res->m_ls += ltc;
+		end = load.indexOf(ARR_ELMT_SEP, * cur);
+		
+		qDebug() << "loading shp:" << load.mid(* cur, end);
+		
+	}
+	res->updSzNPos();
+	return res;
+}
+
+QString Shape::toSaveStr(const QString & shpNm/* = "shp"*/) const {
+	QString res(shpNm + "Sz:" + QString::number(m_ls.size()) + ARR_ELMT_SEP);
+	if(! m_ls.isEmpty()) {
+		foreach(const Lattice * mbr, m_ls) {
+			if(nullptr == mbr) nullMbrLtcEx(ET);
+			res += mbr->toSaveStr();
+		}
+	}
+	return res;
+}
+
+/**
  * ================ 仅内部使用 ================
  */
+
+/**
+ * ~~~~~~~~~~~~ 内部构造 ~~~~~~~~~~~~
+ */
+
+/** 用于从游戏存档中解析出形状：
+ * @param cap ：形状中格子的数量，必须 > 0。 */
+Shape::Shape(RelatObject * parent, int cap)
+	: RelatObject(parent), m_w(0), m_h(0), m_cap(cap) {}
 
 /**
  * ~~~~~~~~~~~~ 随机格子 ~~~~~~~~~~~~

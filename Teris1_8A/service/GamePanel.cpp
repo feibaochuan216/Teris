@@ -12,12 +12,17 @@ extern int ROTAT_DIR; // 尝试旋转时用到
  */
 
 GamePanel::GamePanel(const int level/* = 1*/)
-	: RelatObject(nullptr), state(StateSz), m_level(level),
+	: RelatObject(nullptr), m_state(GpStateSz), m_level(level),
 	m_w(GP_WIDTH), m_h(GP_HEIGHT), m_faller(new Shape(this)), m_obs(),
 	m_speed(SLOWEST_SPEED), m_score(0), m_passScore(0),
 	m_totalScore(0), m_client(nullptr) { // 必须为NULL，防止循环构造
 	if(level < 1) gameLevelEx(ET);
 	init(level); // 初始化游戏面板
+}
+
+GamePanel::GamePanel(int level, qulonglong score, qulonglong totalScore, Shape * faller)
+	: RelatObject(nullptr), m_state(GpStateSz), m_level(level), m_score(score), m_totalScore(totalScore), m_faller(faller) {
+	init(level);
 }
 
 GamePanel::~GamePanel() {
@@ -58,7 +63,7 @@ bool GamePanel::canMove(const int dx, const int dy/* = 0*/) {
 		result = false;
 	} // 是否越界或重叠
 	if(! result && m_faller->y() + m_faller->heigth() <= 0) {
-		state.setVal(IsGameOver, true);
+		m_state.setVal(IsGameOver, true);
 	}
 	return result;
 }
@@ -176,21 +181,21 @@ int GamePanel::heightPix() const {
  */
 
 void GamePanel::leftKeyPressEvent() {
-	if(! state[IsPause] && canMove(-1, 0)) {
+	if(! m_state[IsPause] && canMove(-1, 0)) {
 		m_faller->move(-1, 0);
 		m_client->update();
 	}
 }
 
 void GamePanel::rightKeyPressEvent() {
-	if(! state[IsPause] && canMove(1, 0)) {
+	if(! m_state[IsPause] && canMove(1, 0)) {
 		m_faller->move(1, 0);
 		m_client->update();
 	}
 }
 
 void GamePanel::rotateKeyPressEvent() {
-	if(! state[IsPause]) {
+	if(! m_state[IsPause]) {
 		int offset = 0;
 		if(canRotate(& offset)) {
 			if(RD_CLCK == ROTAT_DIR) m_faller->rotateClock();
@@ -202,11 +207,11 @@ void GamePanel::rotateKeyPressEvent() {
 }
 
 void GamePanel::downKeyPressEvent() {
-	state.setVal(IsPressingDown, true);
+	m_state.setVal(IsPressingDown, true);
 	/* 1, 如果当前为暂停状态，或者已经在以最快速度正在下落，则什么都不做。
 	 * 2, 否则，重新以最快速度为间隔时间开始下落计时。 */
-	if(! state[IsPause]) {
-		state.setVal(IsFallingFast, true);
+	if(! m_state[IsPause]) {
+		m_state.setVal(IsFallingFast, true);
 		m_fallTmr.setInterval(FASTEST_SPEED);
 		if(! m_fallTmr.isActive()) {
 			m_fallTmr.start();
@@ -215,8 +220,8 @@ void GamePanel::downKeyPressEvent() {
 }
 
 void GamePanel::downKeyReleaseEvent() {
-	state.setVal(IsPressingDown, false);
-	state.setVal(IsFallingFast, false);
+	m_state.setVal(IsPressingDown, false);
+	m_state.setVal(IsFallingFast, false);
 	if(m_speed < 0) speedEx(ET);
 	m_fallTmr.setInterval(m_speed);
 }
@@ -226,12 +231,12 @@ void GamePanel::downKeyReleaseEvent() {
  */
 
 void GamePanel::start() {
-	state.setVal(IsPause, false); // 不再暂停
+	m_state.setVal(IsPause, false); // 不再暂停
 	m_fallTmr.start();
 }
 
 void GamePanel::pause() {
-	state.setVal(IsPause, true);
+	m_state.setVal(IsPause, true);
 	m_fallTmr.stop();
 }
 
@@ -250,7 +255,7 @@ void GamePanel::onFallTmOut() {
 		return;
 	} else { // 下落形状不能下降
 		m_fallTmr.stop();
-		if(state[IsGameOver]) { // canMove()会设置IsGameOver状态
+		if(m_state[IsGameOver]) { // canMove()会设置IsGameOver状态
 			gameOver();
 			return;
 		} else if(isPass()) { // 已过关
@@ -271,7 +276,7 @@ void GamePanel::onFallTmOut() {
 			m_client->update(); // 刷新显示
 		} // 需要消行
 		nextFaller(); // 更新下落形状
-		if(! state[IsPause]) m_fallTmr.start(); // 重新开始下落
+		if(! m_state[IsPause]) m_fallTmr.start(); // 重新开始下落
 	} // 下落形状不能下降
 }
 
@@ -446,8 +451,8 @@ GamePanel & GamePanel::init(int level) {
 	m_fallTmr.setInterval(m_speed); // 初始化下落定时器的间隔时间
 	setPassScore(level); // 初始化过关需要的分数
 	m_score = 0; // 初始化本局分数
-	state.fill(false); // 状态标记全部为否
-	state.setVal(IsPause, true); // 暂停状态默认为真
+	m_state.fill(false); // 状态标记全部为否
+	m_state.setVal(IsPause, true); // 暂停状态默认为真
 	return * this;
 }
 
@@ -470,9 +475,9 @@ void GamePanel::print(const int level/* = 0*/) const {
 		 << ", totalScore: " << m_totalScore << ", passScore: " << m_passScore
 		 << endl;
 	indent(level + 1);
-	cout << boolalpha << "state: {FALL: " << state[IsPause]
-			<< ", PRESSING: " << state[IsPressingDown] 
-			   << ", GAME_OVER: " << state[IsGameOver] << "}, faller:";
+	cout << boolalpha << "state: {FALL: " << m_state[IsPause]
+			<< ", PRESSING: " << m_state[IsPressingDown] 
+			   << ", GAME_OVER: " << m_state[IsGameOver] << "}, faller:";
 	indent(level);
 	if (nullptr == m_faller) {
 		cout << " nullptr" << endl;
@@ -491,9 +496,9 @@ void GamePanel::print(const int level/* = 0*/) const {
 
 void GamePanel::printStates(const int level/* = 0*/) const {
 	indent(level);
-	cout << "GamePanel: " << boolalpha << " states: {PAUSE: " << state[IsPause]
-			<< ", PRESSING: " << state[IsPressingDown] 
-			   << ", GAME_OVER: " << state[IsGameOver]
+	cout << "GamePanel: " << boolalpha << " states: {PAUSE: " << m_state[IsPause]
+			<< ", PRESSING: " << m_state[IsPressingDown] 
+			   << ", GAME_OVER: " << m_state[IsGameOver]
 				  << "}, speed: " << m_speed << endl;
 }
 

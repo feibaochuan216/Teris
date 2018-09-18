@@ -39,7 +39,8 @@ SOURCES += \
     show/LoginDialog.cpp \
     show/GuideDlg.cpp \
     db/DbMgr.cpp \
-    db/Usr.cpp
+    db/Usr.cpp \
+    db/Load.cpp
 
 HEADERS += \
     exception/Exception.h \
@@ -57,7 +58,8 @@ HEADERS += \
     show/LoginDialog.h \
     show/GuideDlg.h \
     db/DbMgr.h \
-    db/Usr.h
+    db/Usr.h \
+    db/Load.h
 
 FORMS += \
     show/GuideDlg.ui \

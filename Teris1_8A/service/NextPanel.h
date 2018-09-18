@@ -94,6 +94,18 @@ public:
 		throw ExTemp<NullPtrEx>(ttl, this, "next shape is null");
 	}
 	
+	/** 没有给NextPanel对象指定前端展示的对象 */
+	inline void nullClientEx(const QString & ttl) const {
+		throw ExTemp<NullPtrEx>(ttl, this, "client is null");
+	}
+	
+	
+	// 未完成：异常没有被应用
+	
+	
+	
+	
+	
 	/**
 	 * ================ 内部成员 ================
 	 */

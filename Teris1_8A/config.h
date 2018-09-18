@@ -9,7 +9,7 @@
 #include <iostream>
 #include <time.h>
 #include <pthread.h>
-#include <QObject>
+#include <QString>
 
 using namespace std;
 
@@ -40,6 +40,15 @@ const qulonglong PASS_SCORE = 10; // 过第零关需要的分数，第1关的需
 const double PASS_RATE = 1.2; // 每过一关，过关需要的分数的增长率
 
 const double AWARD_RATE = 2; // 每多消一行，得分乘以多少
+
+/**
+ * ~~~~~~~~~~~~ 数据库规则 ~~~~~~~~~~~~
+ */
+
+/** 游戏存档字符串中的分隔符 */
+const QString KEY_VAL_SEP = ":"; // key-value separator，键值对之间的分隔符
+
+const QString ARR_ELMT_SEP = ","; // array element separator，存档数组元素分隔符
 
 #endif // CONFIG_H
 

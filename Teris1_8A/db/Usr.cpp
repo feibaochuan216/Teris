@@ -4,44 +4,7 @@
  * ================ 析构 ================
  */
 
-UsrData::~UsrData() {
-	if(! m_load.isEmpty()) {
-		QMapIterator<GamePanel *, Shape *> it(m_load);
-		while(it.hasNext()) {
-			it.next();
-			delete it.key();
-			delete it.value();
-		}
-	}
-}
-
-/**
- * ================ 游戏存档解析 ================
- */
-
-QMap<GamePanel *, Shape *> anlys(const QString & load) {
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	// 未完成
-	
-	
-}
-
-QString invsAnlys(const QMap<GamePanel *, Shape *> & map) {
-	
-	
-	// 未完成
-	
-	
-}
+UsrData::~UsrData() {}
 
 /**
  * ================ 内部成员 ================

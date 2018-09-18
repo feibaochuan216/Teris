@@ -24,12 +24,12 @@ bool FIXED_SZ = true; // fixed size，形状是否是固定大小，即它所包
  * ================ 界面显示 ================
  */
 
-int LTC_SZ = 10; // 格子的大小，占多少像素
+int LTC_SZ = 12; // 格子的大小，占多少像素
 
 int ROTAT_DIR = RD_CLCK; // rotation direction，旋转方向，默认为顺时针
 
-int GP_WIDTH = 16; // Game Panel width，游戏面板宽度；必须 ≥ 2 且 ≥ SHP_SZ
-int GP_HEIGHT = 18; // Game Panel height，游戏面板高度；必须 ≥ 2 且 > SHP_SZ
+int GP_WIDTH = 24; // Game Panel width，游戏面板宽度；必须 ≥ 2 且 ≥ SHP_SZ
+int GP_HEIGHT = 32; // Game Panel height，游戏面板高度；必须 ≥ 2 且 > SHP_SZ
 
 int SHP_SZ = 4; // Shape size，下落形状最多占几个格子；必须 ≥ 2 且 ≤ GP_WIDTH、< GP_HEIGHT
 

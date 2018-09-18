@@ -1,4 +1,5 @@
 #include "Lattice.h"
+#include <QDebug>
 
 /**
  * ================ 构造、析构 ================
@@ -46,6 +47,27 @@ int Lattice::xig() const {
 int Lattice::yig() const {
 	if(nullptr == m_parent) nullParentEx(ET);
 	return m_parent->y() + m_y;
+}
+
+/**
+ * ================ 其他 ================
+ */
+
+Lattice * Lattice::anlys(const QString & load, int * cur, RelatObject * parent) {
+	int end = load.indexOf(KEY_VAL_SEP, * cur); // 字符串中代表x坐标的字符串的结尾位置
+	
+	qDebug() << "loading ltc:" << load.mid(* cur, end);
+	
+	Lattice * res = new Lattice(parent);
+	res->m_x = load.mid(* cur, end).toInt();
+	* cur = end + 1; // 字符串中代表y坐标的字符串的起始位置
+	end = load.indexOf(ARR_ELMT_SEP, * cur); // 字符串中代表y坐标的字符串的结尾位置
+	
+	qDebug() << "loading ltc:" << load.mid(* cur, end);
+	
+	res->m_y = load.mid(* cur, end).toInt();
+	* cur = end + 1;
+	return res;
 }
 
 /**

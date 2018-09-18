@@ -5,13 +5,6 @@
 #include <QSqlQuery>
 
 /**
- * ================ 静态成员变量 ================
- */
-
-QString DbMgrData::m_kvs = ":";
-QString DbMgrData::m_aes = ",";
-
-/**
  * ================ 创建 ================
  */
 
@@ -32,7 +25,7 @@ void DbMgrData::createUsrTable() {
 				"pswd text not null,"
 				"type int not null,"
 				"totalScore int not null,"
-				"load text);");
+				"load text not null);");
 		qDebug() << sql;
 		QSqlQuery query;
 		query.exec(sql);

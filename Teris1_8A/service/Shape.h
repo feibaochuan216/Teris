@@ -10,11 +10,15 @@
 #include "RelatObject.h"
 #include "Lattice.h"
 #include "../exception/ExTemp.h"
+#include "../config.h"
+#include <QString>
 #include <QLinkedList> // 形状的格子集合
 #include <QPoint> // 更新尺寸时需要
 #include <QVector> // 消行时需要
 
 extern int LTC_SZ;
+extern const QString KEY_VAL_SEP;
+extern const QString ARR_ELMT_SEP;
 
 class Shape : public RelatObject {
 public:
@@ -184,6 +188,30 @@ public:
 	Shape & rotateAnti();
 	
 	/**
+	 * ================ 游戏存档解析 ================
+	 * 详见游戏存档字符串的规则说明。
+	 */
+	
+	/** 解析游戏存档的字符串转换成形状：
+	 * 1, @param load ：游戏存档的字符串。
+	 * 2, @param cur ：结果参数，字符串流指针的位置，即指向表示形状的字符串的首字符，不能为nullptr。
+	 * 3, @param parent ：转换的形状所属的面板。 */
+	static Shape * anlys(const QString & load, int * cur, RelatObject * parent);
+	
+	/** 反解析形状生成游戏存档的字符串：
+	 * 1, 格式如："shpSz:4,0:0,0:1,1:1,1:0,"
+	 * 2, @param shpNm ：形状名，如"faller"（下落形状）、"next"（下一形状）等，非特殊的形状则名为"shp"。 */
+	QString toSaveStr(const QString & shpNm = "shp") const;
+
+
+
+
+
+
+
+
+	
+	/**
 	 * ================ 异常 ================
 	 * 
 	 * 1, 将抛异常封装成函数，可统一异常描述信息，也便于统计本类一共有几种异常、每种抛异常的代码在什么地方。
@@ -191,8 +219,15 @@ public:
 	 */
 	
 	/** 成员格子的指针为NULL指针 */
-	inline void nullMbrLtcEx(const QString & tll) const {
-		throw ExTemp<NullPtrEx>(tll, this, "member lattice is null");
+	inline void nullMbrLtcEx(const QString & ttl) const {
+		throw ExTemp<NullPtrEx>(ttl, this, "member lattice is null");
+	}
+	
+	/** 解析异常：
+	 * 从数据库中解析游戏存档，生成形状时，出现的异常。 */
+	inline static void anlysEx(const QString & ttl, int sz) {
+		throw Exception(
+					ttl, nullptr, "analyse shape from game loading of database, the shape size is " + QString::number(sz));
 	}
 	
 	/**
@@ -239,6 +274,12 @@ protected:
 	int m_h; // 高，以格子个数为单位
 	int m_cap; // 容量，即最多有几个格子
 	QLinkedList<Lattice *> m_ls; // lattice set，格子的集合
+	
+	/**
+	 * ~~~~~~~~~~~~ 内部构造 ~~~~~~~~~~~~
+	 */
+	
+	explicit Shape(RelatObject * parent, int cap);
 	
 	/**
 	 * ~~~~~~~~~~~~ 设置随机位置 ~~~~~~~~~~~~

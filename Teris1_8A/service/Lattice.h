@@ -3,6 +3,10 @@
 
 #include "RelatObject.h"
 #include "../exception/ExTemp.h"
+#include "../config.h"
+#include <QString>
+extern const QString KEY_VAL_SEP;
+extern const QString ARR_ELMT_SEP;
 
 /** 格子：
  * 1, 组成游戏物体的基本单位，如由4个格子组成一个形状，由下落形状和已经触底变成障碍物的形状共同组成游戏面板，由游戏面板和下一形状面板共同组成游戏界面。
@@ -80,19 +84,20 @@ public:
 	}
 	
 	/**
-	 * ================ 其他 ================
+	 * ================ 游戏存档解析 ================
+	 * 详见游戏存档字符串的规则说明。
 	 */
 	
-	/** 解析游戏存档的字符串转换成格子 */
-//	static Lattice * anlys(const QString & str);
+	/** 解析游戏存档的字符串转换成格子：
+	 * 1, @param load ：游戏存档的字符串。
+	 * 2, @param cur ：结果参数，字符串流指针的位置，即指向代表格子的x坐标的字符串的起始位置，不能为nullptr。
+	 * 3, @param parent ：转换的格子所属的形状。 */
+	static Lattice * anlys(const QString & load, int * cur, RelatObject * parent);
 	
-	
-	// 未完成
-	
-	
-	/** 反解析成游戏存档的数据 */
+	/** 反解析成游戏存档的字符串：
+	 * 格式如："3:4,"、"1:0," */
 	inline QString toSaveStr() const {
-		QString res(QString::number(m_x) + ':' + QString::number(m_y));
+		QString res(QString::number(m_x) + KEY_VAL_SEP + QString::number(m_y) + ARR_ELMT_SEP);
 		return res;
 	}
 	

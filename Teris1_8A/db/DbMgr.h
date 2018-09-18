@@ -93,8 +93,6 @@ protected:
 	Usr m_usr; // 当前用户，负责用户信息的保存及游戏存档的解析、反解析
 	QSqlQueryModel m_model; // 查询结果的模型
 	/** 数据库Usr表中load字段所使用的分隔符 */
-	static QString m_kvs; // key-value separator，键值对之间的分隔符
-	static QString m_aes; // array element separator，存档数组元素分隔符
 	
 	/**
 	 * ~~~~~~~~~~~~ 构造 ~~~~~~~~~~~~

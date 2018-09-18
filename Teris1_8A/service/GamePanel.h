@@ -26,14 +26,14 @@ public:
 	 * ================ 公有成员变量 ================
 	 */
 	
-	Mask state; // 游戏状态标记数组
+	Mask m_state; // 游戏状态标记数组
 	enum StateIndx { // 状态数组的每个下标所代表的含义
 		IsFallingFast = 0, // 定时器是否以最快速度在下落
 		// 这里不能通过m_fallTmr.interval() == FASTEST_SPEED来判断，因为游戏关数到一定级别时，普通速度就已经是最快速度了
 		IsPause = 1, // 是否暂停
 		IsPressingDown = 2, // Down键是否是按下状态，此时下落形状以最快速度下降
 		IsGameOver = 3, // 下落形状已无法再下落，且无法进入游戏面板
-		StateSz = 4 // 状态数组的长度
+		GpStateSz = 4 // 状态数组的长度
 	};
 	// 其他判断：
 	// 下落计时器是否正在计时用m_fallTmr.isActive()
@@ -43,6 +43,13 @@ public:
 	 */
 	
 	explicit GamePanel(const int level = 1);
+	
+	/** 用于从游戏存档字符串中解析出存档数据：
+	 * @param level ：第几关，必须 > 0。
+	 * @param score ：本关的得分。
+	 * @param totalScore ：用户的总得分。
+	 * @param faller ：下落形状，不能为nullptr。 */
+	GamePanel(int level, qulonglong score, qulonglong totalScore, Shape * faller);
 	
 	/** 禁用拷贝构造 */
 private:
@@ -283,6 +290,17 @@ public:
 		throw ExTemp<NullPtrEx>(ttl, this, "lattice of faller is null");
 	}
 	
+	/** 没有给GamePanel对象指定前端展示的对象 */
+	inline void nullClientEx(const QString & ttl) const {
+		throw ExTemp<NullPtrEx>(ttl, this, "client is null");
+	}
+	
+	
+	// 未完成：异常没有被应用
+	
+	
+	
+	
 	/** 下落形状容量异常：
 	 * “下落形状里最多能放几个格子”的设定非法，如为零或-1等。*/
 	inline void fallerCapEx(const QString & ttl) const {
@@ -352,6 +370,16 @@ public:
 	inline const Shape & faller() const { return * m_faller; }
 	
 	inline       Shape & faller()       { return * m_faller; }
+	
+	/** 设置下落形状：
+	 * 用于从游戏存档字符串解析时。 */
+	inline void setFaller(Shape & faller) {
+		if(nullptr == m_faller) m_faller = & faller;
+		else {
+			delete m_faller;
+			m_faller = & faller;
+		}
+	}
 	
 	inline const QLinkedList<Shape *> obs() const { return m_obs; }
 	
@@ -445,7 +473,8 @@ protected:
 	 * 3, 会清空原障碍物。 */
 	inline GamePanel & setObs(const int level) {
 		m_obs.clear();
-		int oh = level / OBS_RATE * OBS_INCREM; // obstracts height
+		int oh = level / OBS_RATE * OBS_INCREM - 1; // obstracts height
+		OBS_MAX = m_h * 2 / 3 - 1;
 		appendObs(oh < OBS_MAX ? oh : OBS_MAX);
 		return * this;
 	}

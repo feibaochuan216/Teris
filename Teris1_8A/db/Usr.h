@@ -1,7 +1,8 @@
 #ifndef USR_H
 #define USR_H
 
-#include "../service/GamePanel.h"
+#include "Load.h"
+#include "../exception/ExTemp.h"
 #include <QString>
 #include <QMap>
 
@@ -10,13 +11,7 @@ typedef shared_ptr<UsrData> Usr; // UsrData的智能指针
 
 /** 用户：
  * 1, 用于在内存保存、管理从数据库读取的用户数据，并将修改后的用户数据保存到数据库。
- * 2, 用户的游戏存档数据由本类负责解析、反解析：
- * . 2.1, 游戏存档在数据库中以键值对的字符串的形式保存，格式为：
- * "关数:本关的分数,下落形状x坐标:下落形状y坐标,
- * fallerSz:下落形状格子数,
- * 格子1的x坐标:格子1的y坐标,格子2的x坐标:格子2的y坐标, ...
- * 
- * "
+ * 2, 用户的游戏存档数据由本类负责解析、反解析。
  * @version 1.8A
  * @date 2018.09.18
  * @author 张良尧 */
@@ -59,14 +54,6 @@ public:
 	~UsrData();
 	
 	/**
-	 * ================ 游戏存档解析 ================
-	 */
-	
-	static QMap<GamePanel *, Shape *> anlys(const QString & load);
-	
-	static QString invsAnlys(const QMap<GamePanel *, Shape *> & map);
-	
-	/**
 	 * ================ Getter/Setter ================
 	 */
 	
@@ -84,9 +71,9 @@ public:
 		m_totalScore = totalScore;
 	}
 	
-	inline const QMap<GamePanel *, Shape *> load() const { return m_load; }
+	inline const Load & load() const { return m_load; }
 	
-	inline       QMap<GamePanel *, Shape *> load()       { return m_load; }
+	inline       Load & load()       { return m_load; }
 	
 	/**
 	 * ================ 内部成员 ================
@@ -100,7 +87,7 @@ protected:
 	QString m_usrNm;
 	UsrType m_type;
 	qulonglong m_totalScore;
-	QMap<GamePanel *, Shape *> m_load;
+	Load m_load;
 	
 	/**
 	 * ~~~~~~~~~~~~ 内部构造 ~~~~~~~~~~~~
